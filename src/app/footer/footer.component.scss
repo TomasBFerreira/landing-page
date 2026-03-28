@@ -1,0 +1,19 @@
+.footer {
+  border-top: 1px solid var(--border);
+  padding: 24px;
+  background: var(--surface);
+}
+
+.footer__inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.footer__copy  { font-size: 12px; color: var(--orange); }
+.footer__note  { font-size: 12px; color: var(--text-muted); }
+.footer__stack { font-size: 11px; color: var(--text-dim); }
+.footer__divider { color: var(--text-dim); }

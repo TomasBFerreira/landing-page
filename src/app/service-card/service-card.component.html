@@ -1,0 +1,30 @@
+<a class="card" [href]="state.service.url" target="_blank" rel="noopener"
+   [class.card--up]="state.status === 'up'"
+   [class.card--down]="state.status === 'down'">
+
+  <div class="card__header">
+    <span class="card__icon">{{ state.service.icon }}</span>
+    @if (state.service.tags?.length) {
+      <div class="card__tags">
+        @for (tag of state.service.tags!.slice(0, 2); track tag) {
+          <span class="card__tag">{{ tag }}</span>
+        }
+      </div>
+    }
+  </div>
+
+  <h3 class="card__name">{{ state.service.name }}</h3>
+  <p class="card__desc">{{ state.service.description }}</p>
+
+  <div class="card__footer">
+    <div class="card__status">
+      <span class="status-dot"
+            [class.status-dot--up]="state.status === 'up'"
+            [class.status-dot--down]="state.status === 'down'"
+            [class.status-dot--pending]="state.status === 'pending'"
+            [class.status-dot--unknown]="state.status === 'unknown'"></span>
+      <span class="card__status-label mono">{{ statusLabel }}</span>
+    </div>
+    <span class="card__arrow">↗</span>
+  </div>
+</a>

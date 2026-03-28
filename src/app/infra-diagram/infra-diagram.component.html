@@ -1,0 +1,248 @@
+<section class="diagram-section">
+  <div class="diagram-section__header">
+    <p class="section-label">infrastructure</p>
+    <h2 class="section-heading">Network topology</h2>
+    <p class="diagram-section__sub">Live view of the homelab stack · dots reflect real-time health · IP range: 1xx = prod, 2xx = dev</p>
+  </div>
+
+  <!-- Environment selector -->
+  <div class="env-selector">
+    <button class="env-btn" [class.env-btn--active]="activeEnv() === 'prod'" (click)="setEnv('prod')">prod</button>
+    <button class="env-btn env-btn--qa" [class.env-btn--active]="activeEnv() === 'qa'" (click)="setEnv('qa')">qa</button>
+    <button class="env-btn env-btn--dev" [class.env-btn--active]="activeEnv() === 'dev'" (click)="setEnv('dev')">dev</button>
+  </div>
+
+  <div class="diagram-wrap">
+    <svg class="diagram-svg" viewBox="0 0 1080 600" xmlns="http://www.w3.org/2000/svg" aria-label="Infrastructure diagram">
+      <defs>
+        <filter id="glow-orange" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+          <feComposite in="blur" in2="SourceGraphic"/>
+        </filter>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#242424" stroke-width="1"/>
+        </pattern>
+        <marker id="arrow-orange" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+          <path d="M0,0 L0,6 L6,3 z" fill="#f97316" opacity="0.5"/>
+        </marker>
+      </defs>
+
+      <!-- Background -->
+      <rect width="1080" height="600" fill="url(#grid)"/>
+
+      <!-- ─── Zone backgrounds ───────────────────────────────────────── -->
+      <g [style.display]="dispProd()">
+        <rect class="zone zone--prod" x="20" y="240" width="524" height="348" rx="12"/>
+        <text class="zone-label zone-label--prod" x="32" y="262">PROD · 192.168.50.1xx</text>
+      </g>
+      <g [style.display]="dispDev()">
+        <rect class="zone zone--dev" x="556" y="240" width="504" height="348" rx="12"/>
+        <text class="zone-label zone-label--dev" x="568" y="262">DEV · 192.168.50.2xx</text>
+      </g>
+
+      <!-- ─── CLOUDFLARE (always visible) ──────────────────────────── -->
+      <g class="node node--cloud" transform="translate(460, 16)">
+        <rect class="node__bg node__bg--cloud" x="0" y="0" width="160" height="52" rx="26"/>
+        <text class="node__icon" x="28" y="32">☁</text>
+        <text class="node__label" x="86" y="24">Cloudflare</text>
+        <text class="node__sub"   x="86" y="40">CDN · Tunnel</text>
+      </g>
+
+      <line class="flow-line flow-line--animated" x1="540" y1="68" x2="540" y2="110"/>
+
+      <!-- ─── TRAEFIK (always visible) ─────────────────────────────── -->
+      <g class="node node--core" transform="translate(416, 110)">
+        <rect class="node__bg node__bg--core" x="0" y="0" width="248" height="60" rx="12"/>
+        <text class="node__icon" x="30" y="36">⇄</text>
+        <text class="node__label" x="124" y="26">Traefik</text>
+        <text class="node__sub"   x="124" y="44">Reverse proxy · SSL · Cloudflare tunnel</text>
+        <circle [class]="dotClass('traefik')" cx="228" cy="14" r="5"/>
+      </g>
+
+      <line class="flow-line flow-line--animated" x1="540" y1="170" x2="540" y2="208"/>
+
+      <!-- ─── LAN bus (always visible) ─────────────────────────────── -->
+      <rect class="bus" x="20" y="208" width="1040" height="10" rx="5"/>
+      <text class="subnet-label" x="32" y="204">192.168.50.x  ·  homelab LAN</text>
+
+      <!-- ═══════════════ PROD ZONE ════════════════════════════════════ -->
+      <g [style.display]="dispProd()">
+
+        <!-- Drop lines from bus to tier-1 prod nodes -->
+        <line class="drop-line" x1="104" y1="218" x2="104" y2="278"/>
+        <line class="drop-line" x1="278" y1="218" x2="278" y2="278"/>
+        <line class="drop-line" x1="452" y1="218" x2="452" y2="278"/>
+
+        <!-- Vault prod -->
+        <g class="node" transform="translate(28, 278)">
+          <rect class="node__bg node__bg--prod-accent" x="0" y="0" width="152" height="80" rx="10"/>
+          <text class="node__icon" x="24" y="42">🔐</text>
+          <text class="node__label" x="76" y="30">Vault HA</text>
+          <text class="node__sub"   x="76" y="46">Prod · secrets</text>
+          <text class="node__sub"   x="76" y="60">.145 · .146</text>
+          <circle [class]="dotClass('vault-prod')" cx="136" cy="12" r="5"/>
+        </g>
+
+        <!-- Nextcloud -->
+        <g class="node" transform="translate(202, 278)">
+          <rect class="node__bg node__bg--prod-accent" x="0" y="0" width="152" height="80" rx="10"/>
+          <text class="node__icon" x="24" y="42">☁</text>
+          <text class="node__label" x="76" y="30">Nextcloud</text>
+          <text class="node__sub"   x="76" y="46">File storage</text>
+          <text class="node__sub"   x="76" y="60">.105</text>
+          <circle [class]="dotClass('nextcloud')" cx="136" cy="12" r="5"/>
+        </g>
+
+        <!-- Media server .111 -->
+        <g class="node" transform="translate(376, 278)">
+          <rect class="node__bg node__bg--prod-accent" x="0" y="0" width="152" height="80" rx="10"/>
+          <text class="node__icon" x="24" y="42">🖥</text>
+          <text class="node__label" x="76" y="28">Media Host</text>
+          <text class="node__sub"   x="76" y="43">Prod · QA workloads</text>
+          <text class="node__sub"   x="76" y="57">.111</text>
+          <circle [class]="dotClass('plex')" cx="136" cy="12" r="5"/>
+        </g>
+
+        <!-- Prod sub-nodes drop lines (Plex, Overseerr) -->
+        <line class="drop-line drop-line--sm" x1="416" y1="358" x2="68"  y2="405"/>
+        <line class="drop-line drop-line--sm" x1="440" y1="358" x2="194" y2="405"/>
+
+        <!-- Prod sub-nodes -->
+        <g class="node node--sm node--prod-sub" transform="translate(28, 405)">
+          <rect class="node__bg" x="0" y="0" width="80" height="52" rx="7"/>
+          <text class="node__label node__label--sm" x="40" y="20">Plex</text>
+          <text class="node__sub node__sub--env" x="40" y="33">prod</text>
+          <text class="node__sub"                x="40" y="45">:32400</text>
+          <circle [class]="dotClass('plex')" cx="68" cy="8" r="4"/>
+        </g>
+
+        <g class="node node--sm node--prod-sub" transform="translate(154, 405)">
+          <rect class="node__bg" x="0" y="0" width="80" height="52" rx="7"/>
+          <text class="node__label node__label--sm" x="40" y="20">Overseerr</text>
+          <text class="node__sub node__sub--env" x="40" y="33">prod</text>
+          <text class="node__sub"                x="40" y="45">:5055</text>
+          <circle [class]="dotClass('overseerr')" cx="68" cy="8" r="4"/>
+        </g>
+
+        <!-- QA sub-nodes (only when qa is active) -->
+        <g [style.display]="dispQa()">
+          <line class="drop-line drop-line--sm" x1="464" y1="358" x2="328" y2="405"/>
+          <line class="drop-line drop-line--sm" x1="488" y1="358" x2="420" y2="405"/>
+          <line class="drop-line drop-line--sm" x1="512" y1="358" x2="512" y2="405"/>
+
+          <g class="node node--sm node--qa-sub" transform="translate(286, 405)">
+            <rect class="node__bg node__bg--qa" x="0" y="0" width="84" height="52" rx="7"/>
+            <text class="node__label node__label--sm" x="42" y="20">Sonarr</text>
+            <text class="node__sub node__sub--env-qa" x="42" y="33">QA</text>
+            <text class="node__sub"                   x="42" y="45">:8989</text>
+            <circle [class]="dotClass('sonarr-qa')" cx="72" cy="8" r="4"/>
+          </g>
+
+          <g class="node node--sm node--qa-sub" transform="translate(378, 405)">
+            <rect class="node__bg node__bg--qa" x="0" y="0" width="84" height="52" rx="7"/>
+            <text class="node__label node__label--sm" x="42" y="20">Radarr</text>
+            <text class="node__sub node__sub--env-qa" x="42" y="33">QA</text>
+            <text class="node__sub"                   x="42" y="45">:7878</text>
+            <circle [class]="dotClass('radarr-qa')" cx="72" cy="8" r="4"/>
+          </g>
+
+          <g class="node node--sm node--qa-sub" transform="translate(470, 405)">
+            <rect class="node__bg node__bg--qa" x="0" y="0" width="84" height="52" rx="7"/>
+            <text class="node__label node__label--sm" x="42" y="20">+ 5 more</text>
+            <text class="node__sub node__sub--env-qa" x="42" y="33">QA</text>
+            <text class="node__sub"                   x="42" y="45">services</text>
+          </g>
+        </g>
+
+      </g><!-- /prod zone -->
+
+      <!-- ═══════════════ DEV ZONE ═════════════════════════════════════ -->
+      <g [style.display]="dispDev()">
+
+        <!-- Drop lines from bus to tier-1 dev nodes -->
+        <line class="drop-line" x1="628" y1="218" x2="628" y2="278"/>
+        <line class="drop-line" x1="800" y1="218" x2="800" y2="278"/>
+        <line class="drop-line" x1="972" y1="218" x2="972" y2="278"/>
+
+        <!-- Vault dev -->
+        <g class="node node--dev" transform="translate(552, 278)">
+          <rect class="node__bg node__bg--dev" x="0" y="0" width="152" height="80" rx="10"/>
+          <text class="node__icon" x="24" y="42">🔐</text>
+          <text class="node__label" x="76" y="30">Vault HA</text>
+          <text class="node__sub"   x="76" y="46">Dev · secrets</text>
+          <text class="node__sub"   x="76" y="60">.245 · .246</text>
+          <circle [class]="dotClass('vault-dev')" cx="136" cy="12" r="5"/>
+        </g>
+
+        <!-- Authentik HA -->
+        <g class="node node--dev" transform="translate(724, 278)">
+          <rect class="node__bg node__bg--dev" x="0" y="0" width="152" height="80" rx="10"/>
+          <text class="node__icon" x="24" y="42">🪪</text>
+          <text class="node__label" x="76" y="30">Authentik HA</text>
+          <text class="node__sub"   x="76" y="46">SSO · OIDC</text>
+          <text class="node__sub"   x="76" y="60">.247 · .248</text>
+          <circle [class]="dotClass('authentik')" cx="136" cy="12" r="5"/>
+        </g>
+
+        <!-- Rancher / K3s -->
+        <g class="node node--dev" transform="translate(896, 278)">
+          <rect class="node__bg node__bg--dev" x="0" y="0" width="152" height="80" rx="10"/>
+          <text class="node__icon" x="24" y="42">☸</text>
+          <text class="node__label" x="76" y="30">K3s / Rancher</text>
+          <text class="node__sub"   x="76" y="46">Dev control plane</text>
+          <text class="node__sub"   x="76" y="60">.202</text>
+          <circle [class]="dotClass('rancher')" cx="136" cy="12" r="5"/>
+        </g>
+
+        <!-- Drop lines from Rancher to tier-2 -->
+        <line class="drop-line drop-line--sm" x1="948" y1="358" x2="796" y2="405"/>
+        <line class="drop-line drop-line--sm" x1="972" y1="358" x2="896" y2="405"/>
+
+        <!-- Uptime Kuma -->
+        <g class="node node--sm node--dev-sub" transform="translate(752, 405)">
+          <rect class="node__bg node__bg--dev" x="0" y="0" width="88" height="52" rx="7"/>
+          <text class="node__label node__label--sm" x="44" y="20">Uptime Kuma</text>
+          <text class="node__sub node__sub--env" x="44" y="33">dev</text>
+          <text class="node__sub"                x="44" y="45">.202:3001</text>
+          <circle [class]="dotClass('kuma')" cx="76" cy="8" r="4"/>
+        </g>
+
+        <!-- Dev worker .211 -->
+        <g class="node node--dev" transform="translate(848, 405)">
+          <rect class="node__bg node__bg--dev" x="0" y="0" width="96" height="52" rx="7"/>
+          <text class="node__label node__label--sm" x="48" y="20">Dev Worker</text>
+          <text class="node__sub" x="48" y="33">k3s · media stack</text>
+          <text class="node__sub" x="48" y="46">.211</text>
+        </g>
+
+        <!-- Drop lines from Dev Worker to tier-3 -->
+        <line class="drop-line drop-line--sm" x1="872" y1="457" x2="800" y2="494"/>
+        <line class="drop-line drop-line--sm" x1="896" y1="457" x2="892" y2="494"/>
+        <line class="drop-line drop-line--sm" x1="920" y1="457" x2="982" y2="494"/>
+
+        <g class="node node--sm node--dev-sub" transform="translate(760, 494)">
+          <rect class="node__bg node__bg--dev" x="0" y="0" width="80" height="44" rx="7"/>
+          <text class="node__label node__label--sm" x="40" y="19">Sonarr</text>
+          <text class="node__sub node__sub--env" x="40" y="33">dev</text>
+          <circle [class]="dotClass('sonarr-dev')" cx="68" cy="8" r="4"/>
+        </g>
+
+        <g class="node node--sm node--dev-sub" transform="translate(852, 494)">
+          <rect class="node__bg node__bg--dev" x="0" y="0" width="80" height="44" rx="7"/>
+          <text class="node__label node__label--sm" x="40" y="19">Radarr</text>
+          <text class="node__sub node__sub--env" x="40" y="33">dev</text>
+          <circle [class]="dotClass('radarr-dev')" cx="68" cy="8" r="4"/>
+        </g>
+
+        <g class="node node--sm node--dev-sub" transform="translate(942, 494)">
+          <rect class="node__bg node__bg--dev" x="0" y="0" width="80" height="44" rx="7"/>
+          <text class="node__label node__label--sm" x="40" y="19">Wiki.js</text>
+          <text class="node__sub node__sub--env" x="40" y="33">dev</text>
+          <circle [class]="dotClass('wikijs')" cx="68" cy="8" r="4"/>
+        </g>
+
+      </g><!-- /dev zone -->
+
+    </svg>
+  </div>
+</section>

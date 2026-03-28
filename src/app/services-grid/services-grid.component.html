@@ -1,0 +1,34 @@
+<section class="grid-section">
+  <div class="grid-section__header">
+    <p class="section-label">services</p>
+    <h2 class="section-heading">Running applications</h2>
+    <p class="grid-section__sub">Click any card to open the service · health polled every 30 s</p>
+  </div>
+
+  @for (group of groups; track group.env) {
+    @if (statesFor(group.env).length > 0) {
+      <div class="env-group env-group--{{ group.env }}">
+
+        <div class="env-group__header">
+          <div class="env-group__title-row">
+            <div class="env-group__badge env-group__badge--{{ group.env }}">{{ group.label }}</div>
+            <span class="env-group__sublabel mono">{{ group.sublabel }}</span>
+          </div>
+          <div class="env-group__stats mono">
+            <span class="env-group__stat-up">{{ upCount(group.env) }}</span>
+            <span class="env-group__stat-sep">/</span>
+            <span class="env-group__stat-total">{{ statesFor(group.env).length }}</span>
+            <span class="env-group__stat-label">up</span>
+          </div>
+        </div>
+
+        <div class="card-grid">
+          @for (state of statesFor(group.env); track state.service.id) {
+            <app-service-card [state]="state" />
+          }
+        </div>
+
+      </div>
+    }
+  }
+</section>

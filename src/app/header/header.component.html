@@ -1,0 +1,69 @@
+<header class="header">
+  <div class="header__inner">
+
+    <div class="header__brand">
+      <div class="header__logo">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="8" fill="#f97316" fill-opacity="0.15"/>
+          <rect x="1" y="1" width="30" height="30" rx="7" stroke="#f97316" stroke-opacity="0.4" stroke-width="1"/>
+          <rect x="6"  y="8"  width="20" height="3" rx="1.5" fill="#f97316"/>
+          <rect x="6"  y="14" width="14" height="3" rx="1.5" fill="#f97316" fill-opacity="0.7"/>
+          <rect x="6"  y="20" width="17" height="3" rx="1.5" fill="#f97316" fill-opacity="0.4"/>
+        </svg>
+      </div>
+      <div class="header__wordmark">
+        <span class="header__site">databaes.net</span>
+        <span class="header__tagline">homelab infrastructure</span>
+      </div>
+    </div>
+
+    <div class="header__status-bar">
+      <div class="header__clock mono">{{ currentTime() | date:'HH:mm:ss' }}</div>
+
+      <div class="header__status-pill" [class.header__status-pill--ok]="allUp()">
+        <span class="status-dot"
+              [class.status-dot--up]="allUp()"
+              [class.status-dot--pending]="!allUp() && downCount() === 0"
+              [class.status-dot--down]="downCount() > 0"></span>
+        <span class="mono">
+          @if (allUp()) { all systems operational }
+          @else if (downCount() > 0) { {{ downCount() }} service{{ downCount() > 1 ? 's' : '' }} down }
+          @else { checking... }
+        </span>
+      </div>
+
+      <div class="header__counts mono">
+        <span class="header__count header__count--up">{{ upCount() }} up</span>
+        <span class="header__sep">/</span>
+        <span class="header__count header__count--down">{{ downCount() }} down</span>
+        <span class="header__sep">/</span>
+        <span class="header__count">{{ total() }} total</span>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero__inner">
+    <p class="hero__eyebrow mono">// homelab · proxmox · k3s · rancher</p>
+    <h1 class="hero__title">
+      <span class="hero__title-accent">data</span>baes
+      <span class="hero__title-dim">.net</span>
+    </h1>
+    <p class="hero__sub">
+      Self-hosted infrastructure running on bare-metal Proxmox.<br>
+      Kubernetes workloads managed by Rancher · secrets by Vault · auth by Authentik.
+    </p>
+    <div class="hero__badges">
+      <span class="tag tag--infra">Proxmox VE</span>
+      <span class="tag tag--infra">k3s</span>
+      <span class="tag tag--infra">Rancher</span>
+      <span class="tag tag--infra">Vault HA</span>
+      <span class="tag tag--infra">Authentik SSO</span>
+      <span class="tag tag--infra">Traefik</span>
+      <span class="tag tag--infra">Cloudflare</span>
+    </div>
+  </div>
+</section>

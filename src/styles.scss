@@ -1,0 +1,134 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
+
+// ── Color tokens ──────────────────────────────────────────────────────────────
+:root {
+  --bg:         #161616;
+  --surface:    #1f1f1f;
+  --surface-2:  #272727;
+  --surface-3:  #303030;
+  --border:     #383838;
+  --orange:     #f97316;
+  --orange-dim: #c2570f;
+  --orange-glow: rgba(249, 115, 22, 0.18);
+  --orange-glow-strong: rgba(249, 115, 22, 0.35);
+  --text:       #e5e5e5;
+  --text-muted: #888;
+  --text-dim:   #555;
+  --green:      #22c55e;
+  --red:        #ef4444;
+  --yellow:     #eab308;
+  --radius:     10px;
+  --radius-lg:  16px;
+  --mono:       'Space Mono', 'JetBrains Mono', monospace;
+  --sans:       'Inter', system-ui, sans-serif;
+}
+
+// ── Reset & base ──────────────────────────────────────────────────────────────
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+
+  // Subtle scanline overlay for retro feel
+  &::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.04) 2px,
+      rgba(0, 0, 0, 0.04) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+}
+
+a { color: var(--orange); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+// ── Utility classes ───────────────────────────────────────────────────────────
+.mono { font-family: var(--mono); }
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+
+.tag--infra { background: rgba(99,102,241,0.1);  border-color: rgba(99,102,241,0.3);  color: #818cf8; }
+.tag--prod  { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.3);   color: var(--green);  }
+.tag--qa    { background: rgba(234,179,8,0.1);  border-color: rgba(234,179,8,0.3);   color: var(--yellow); }
+.tag--dev   { background: rgba(249,115,22,0.1); border-color: rgba(249,115,22,0.3);  color: var(--orange); }
+
+.section-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-bottom: 8px;
+
+  &::before { content: '// '; opacity: 0.5; }
+}
+
+.section-heading {
+  font-size: 24px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+// ── Scrollbar ─────────────────────────────────────────────────────────────────
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--orange-dim); }
+
+// ── Status dot ────────────────────────────────────────────────────────────────
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+
+  &--up      { background: var(--green);  box-shadow: 0 0 6px var(--green); animation: pulse-green 2s infinite; }
+  &--down    { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+  &--pending { background: var(--yellow); animation: blink 1s infinite; }
+  &--unknown { background: var(--text-dim); }
+}
+
+@keyframes pulse-green {
+  0%, 100% { box-shadow: 0 0 4px var(--green); }
+  50%       { box-shadow: 0 0 10px var(--green), 0 0 20px rgba(34,197,94,0.3); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -20; }
+}

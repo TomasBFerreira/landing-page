@@ -1,0 +1,201 @@
+// ── Section wrapper ───────────────────────────────────────────────────────────
+.diagram-section { padding: 64px 0 48px; }
+
+.diagram-section__header { margin-bottom: 32px; }
+
+.diagram-section__sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+// ── Env selector ──────────────────────────────────────────────────────────────
+.env-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.env-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  &:hover { color: var(--text); border-color: rgba(34, 197, 94, 0.4); }
+
+  &--active {
+    color: rgba(34, 197, 94, 1);
+    border-color: rgba(34, 197, 94, 0.5);
+    background: rgba(34, 197, 94, 0.06);
+  }
+
+  &--qa#{&}--active {
+    color: rgba(234, 179, 8, 1);
+    border-color: rgba(234, 179, 8, 0.5);
+    background: rgba(234, 179, 8, 0.06);
+  }
+
+  &--dev#{&}--active {
+    color: var(--orange);
+    border-color: rgba(249, 115, 22, 0.5);
+    background: rgba(249, 115, 22, 0.06);
+  }
+}
+
+// ── Diagram container ─────────────────────────────────────────────────────────
+.diagram-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  padding: 16px;
+}
+
+.diagram-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+// ── Zone backgrounds ──────────────────────────────────────────────────────────
+.zone {
+  &--prod { fill: rgba(34, 197, 94, 0.04);  stroke: rgba(34, 197, 94, 0.15);  stroke-width: 1; }
+  &--dev  { fill: rgba(249, 115, 22, 0.04); stroke: rgba(249, 115, 22, 0.15); stroke-width: 1; }
+}
+
+.zone-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+
+  &--prod { fill: rgba(34, 197, 94, 0.5); }
+  &--dev  { fill: rgba(249, 115, 22, 0.5); }
+}
+
+// ── LAN bus ───────────────────────────────────────────────────────────────────
+.bus {
+  fill: var(--orange);
+  opacity: 0.2;
+}
+
+// ── Flow lines ────────────────────────────────────────────────────────────────
+.flow-line {
+  stroke: var(--orange);
+  stroke-width: 1.5;
+  stroke-opacity: 0.4;
+  stroke-dasharray: 6 4;
+  fill: none;
+
+  &--animated { animation: dash-flow 0.8s linear infinite; }
+}
+
+// ── Drop lines ────────────────────────────────────────────────────────────────
+.drop-line {
+  stroke: var(--border);
+  stroke-width: 1.5;
+  fill: none;
+
+  &--sm { stroke-width: 1; stroke-opacity: 0.5; }
+}
+
+// ── Subnet label ──────────────────────────────────────────────────────────────
+.subnet-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  fill: var(--text-dim);
+  letter-spacing: 0.05em;
+}
+
+// ── Nodes ─────────────────────────────────────────────────────────────────────
+.node { cursor: default; }
+
+.node__bg {
+  fill: var(--surface-2);
+  stroke: var(--border);
+  stroke-width: 1;
+
+  // Environment-specific fills
+  &--cloud {
+    fill: var(--surface-3);
+    stroke: rgba(249, 115, 22, 0.3);
+  }
+
+  &--core {
+    fill: var(--surface-3);
+    stroke: rgba(249, 115, 22, 0.4);
+    stroke-width: 1.5;
+  }
+
+  &--prod-accent {
+    fill: var(--surface-2);
+    stroke: rgba(34, 197, 94, 0.2);
+  }
+
+  &--dev {
+    fill: var(--surface-2);
+    stroke: rgba(249, 115, 22, 0.2);
+  }
+
+  &--qa {
+    fill: rgba(234, 179, 8, 0.06);
+    stroke: rgba(234, 179, 8, 0.25);
+  }
+}
+
+// ── Node labels ───────────────────────────────────────────────────────────────
+.node__icon {
+  font-size: 18px;
+  dominant-baseline: middle;
+  text-anchor: middle;
+}
+
+.node__label {
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  fill: var(--text);
+  dominant-baseline: middle;
+  text-anchor: middle;
+  letter-spacing: 0.02em;
+
+  &--sm { font-size: 10px; }
+}
+
+.node__sub {
+  font-family: var(--sans);
+  font-size: 9px;
+  fill: var(--text-muted);
+  dominant-baseline: middle;
+  text-anchor: middle;
+
+  &--env    { fill: rgba(34, 197, 94, 0.8);  font-family: var(--mono); font-size: 8px; }
+  &--env-qa { fill: rgba(234, 179, 8, 0.9);  font-family: var(--mono); font-size: 8px; letter-spacing: 0.06em; }
+}
+
+// ── Status dots (SVG circles) ─────────────────────────────────────────────────
+circle.status-dot--up {
+  fill: var(--green);
+  filter: drop-shadow(0 0 4px var(--green));
+  animation: pulse-svg-green 2s infinite;
+}
+
+circle.status-dot--down    { fill: var(--red);      filter: drop-shadow(0 0 4px var(--red)); }
+circle.status-dot--pending { fill: var(--yellow);   animation: blink 1s infinite; }
+circle.status-dot--unknown { fill: var(--text-dim); }
+
+@keyframes pulse-svg-green {
+  0%, 100% { filter: drop-shadow(0 0 3px var(--green)); opacity: 1; }
+  50%       { filter: drop-shadow(0 0 8px var(--green)); opacity: 0.85; }
+}
