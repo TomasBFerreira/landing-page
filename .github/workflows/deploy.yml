@@ -332,31 +332,43 @@ jobs:
 
       - name: Push route update
         working-directory: traefik-gitops
-        env:
-          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
+          # Push services.yml first (always works — no workflow scope needed)
+          git add config/dynamic/services.yml
           if git diff --staged --quiet; then
-            echo "No changes to push"
+            echo "No route changes to push"
           else
-            git commit -m "chore: upsert $SERVICE route + fix apex CF routing"
-            git push && echo "Push succeeded" || {
-              echo "WARNING: Push failed — GH_PAT may lack 'workflow' scope for workflow file changes"
-              echo "Attempting to push services.yml only..."
-              git reset HEAD~1 --soft
-              git restore --staged .github/
-              git stash .github/ 2>/dev/null || true
-              git commit -m "chore: upsert $SERVICE route for $ENV" -- config/dynamic/services.yml
-              git push
-            }
+            git commit -m "chore: upsert $SERVICE route for $ENV"
+            git push
+          fi
+
+      - name: Push CF routing fix (requires GH_PAT workflow scope)
+        working-directory: traefik-gitops
+        continue-on-error: true
+        run: |
+          git add .github/workflows/sync-dns.yml .github/workflows/backfill-dns.yml
+          if git diff --staged --quiet; then
+            echo "Workflow files already patched — no changes"
+          else
+            git commit -m "fix: route databaes.net apex to dev Cloudflare tunnel"
+            if git push; then
+              echo "Workflow files updated successfully"
+            else
+              echo "::warning::GH_PAT lacks 'workflow' scope — cannot auto-patch CF routing."
+              echo "::warning::Manually add 'workflow' scope to the GH_PAT, OR edit these files in GitHub UI:"
+              echo "::warning::  traefik-gitops: sync-dns.yml + backfill-dns.yml"
+              echo "::warning::  Change: grep -qE '\\-dev\\.'  =>  grep -qE '\\-dev\\.|^databaes\\.net\$'"
+            fi
           fi
 
       - name: Trigger backfill-dns to fix existing Cloudflare CNAME
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           echo "Triggering backfill-dns.yml to update/create Cloudflare CNAME for $HOSTNAME..."
-          gh workflow run backfill-dns.yml --repo TomasBFerreira/traefik-gitops
-          echo "Backfill triggered — monitor at https://github.com/TomasBFerreira/traefik-gitops/actions"
+          gh workflow run backfill-dns.yml --repo TomasBFerreira/traefik-gitops \
+            && echo "Backfill triggered — https://github.com/TomasBFerreira/traefik-gitops/actions" \
+            || echo "Could not trigger backfill (run manually if needed)"
