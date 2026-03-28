@@ -170,6 +170,16 @@ jobs:
           kustomize edit set image $IMAGE=$IMAGE:${{ github.sha }}
           kubectl apply -k .
 
+      - name: Open NodePort in worker firewall
+        run: |
+          # Ensure the NodePort is not blocked by a host firewall on the worker
+          ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+            "if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q 'Status: active'; then
+               ufw allow $PORT/tcp && echo 'UFW: opened port $PORT'
+             fi
+             iptables -C INPUT -p tcp --dport $PORT -j ACCEPT 2>/dev/null || \
+               ( iptables -I INPUT -p tcp --dport $PORT -j ACCEPT && echo 'iptables: opened port $PORT' )"
+
       - name: Wait for rollout
         run: |
           # Show pod status before waiting
