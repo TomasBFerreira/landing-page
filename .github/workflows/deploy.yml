@@ -48,6 +48,9 @@ jobs:
   deploy:
     needs: [build-and-push]
     runs-on: ${{ fromJSON(github.event_name == 'push' && '["self-hosted","dev"]' || format('["self-hosted","{0}"]', inputs.env)) }}
+    permissions:
+      contents: read
+      packages: read
     outputs:
       worker_ip: ${{ steps.resolve-ip.outputs.worker_ip }}
     env:
@@ -92,7 +95,7 @@ jobs:
             > keys/worker_ssh
           chmod 600 keys/worker_ssh
 
-      - name: Install kubectl and kustomize
+      - name: Install kubectl, kustomize and crane
         run: |
           if ! command -v kubectl &>/dev/null; then
             curl -LO "https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl"
@@ -103,6 +106,10 @@ jobs:
             curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz | tar xz
             install -m 0755 kustomize /usr/local/bin/kustomize
             rm kustomize
+          fi
+          if ! command -v crane &>/dev/null; then
+            curl -sL https://github.com/google/go-containerregistry/releases/download/v0.19.1/go-containerregistry_Linux_x86_64.tar.gz | tar xz -C /tmp crane
+            install -m 0755 /tmp/crane /usr/local/bin/crane
           fi
 
       - name: Setup kubectl
@@ -129,6 +136,14 @@ jobs:
             KUBECONFIG="$OLD_KUBECONFIG" kubectl delete namespace $SERVICE --ignore-not-found || true
             rm -f "$OLD_KUBECONFIG"
           fi
+
+      - name: Airgap image push to worker
+        run: |
+          # VLAN 20 nodes have no internet — pull on runner using crane and stream to worker
+          echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login ghcr.io -u ${{ github.actor }} --password-stdin
+          crane pull $IMAGE:${{ github.sha }} - \
+            | ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+              'k3s ctr images import -'
 
       - name: Create namespace and apply manifests
         run: |
