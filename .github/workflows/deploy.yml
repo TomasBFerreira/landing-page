@@ -151,6 +151,8 @@ jobs:
       - name: Create namespace and apply manifests
         run: |
           kubectl create namespace $SERVICE --dry-run=client -o yaml | kubectl apply -f -
+          # Force-delete any pods stuck in Terminating from a previous failed rollout
+          kubectl delete pods --all -n $SERVICE --force --grace-period=0 2>/dev/null || true
           cd manifests/overlays/$ENV
           kustomize edit set image $IMAGE=$IMAGE:${{ github.sha }}
           kubectl apply -k .

@@ -13,6 +13,7 @@ spec:
       labels:
         app: databaes-landing-page
     spec:
+      terminationGracePeriodSeconds: 5
       containers:
         - name: databaes-landing-page
           image: ghcr.io/tomasbferreira/databaes-landing-page:latest
