@@ -143,9 +143,8 @@ jobs:
           echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login ghcr.io -u ${{ github.actor }} --password-stdin
 
           # Ensure the k3s pause sandbox image is present (required to create any pod)
-          PAUSE_PRESENT=$(ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
-            'k3s ctr images list | grep -c "mirrored-pause:3.6"' || echo 0)
-          if [ "$PAUSE_PRESENT" = "0" ]; then
+          if ! ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+              'k3s ctr images list | grep -q "mirrored-pause:3.6"'; then
             echo "Importing rancher/mirrored-pause:3.6 (required sandbox image)..."
             crane pull --format=tarball rancher/mirrored-pause:3.6 /tmp/pause.tar
             scp -i keys/worker_ssh -o StrictHostKeyChecking=no /tmp/pause.tar root@$WORKER_IP:/tmp/pause.tar
