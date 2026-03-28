@@ -1,0 +1,207 @@
+name: Deploy databaes-landing-page
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      env:
+        type: choice
+        options: [dev, prod]
+        default: dev
+      worker_node_ip:
+        required: false
+        description: Override worker node IP (leave blank to resolve from Vault)
+
+env:
+  SERVICE: databaes-landing-page
+  IMAGE: ghcr.io/tomasbferreira/databaes-landing-page
+  PORT: "80"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image_tag: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/tomasbferreira/databaes-landing-page:${{ github.sha }}
+            ghcr.io/tomasbferreira/databaes-landing-page:latest
+
+  deploy:
+    needs: [build-and-push]
+    runs-on: ${{ github.event_name == 'push' && 'dev' || inputs.env }}
+    outputs:
+      worker_ip: ${{ steps.resolve-ip.outputs.worker_ip }}
+    env:
+      ENV: ${{ github.event_name == 'push' && 'dev' || inputs.env }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Normalise Vault address
+        run: |
+          VAULT_ADDR="${{ secrets.VAULT_BOOTSTRAP_ADDR }}"
+          VAULT_ADDR="${VAULT_ADDR%/}"
+          echo "VAULT_ADDR=$VAULT_ADDR" >> $GITHUB_ENV
+
+      - name: Validate Vault token
+        run: |
+          STATUS=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -H "X-Vault-Token: ${{ secrets.VAULT_BOOTSTRAP_ROOT_TOKEN }}" \
+            "$VAULT_ADDR/v1/auth/token/lookup-self")
+          [ "$STATUS" = "200" ] || { echo "Vault token invalid (HTTP $STATUS)"; exit 1; }
+
+      - name: Resolve worker-node IP
+        id: resolve-ip
+        run: |
+          if [ -n "${{ inputs.worker_node_ip }}" ]; then
+            WORKER_IP="${{ inputs.worker_node_ip }}"
+          else
+            WORKER_IP=$(curl -sf \
+              -H "X-Vault-Token: ${{ secrets.VAULT_BOOTSTRAP_ROOT_TOKEN }}" \
+              "$VAULT_ADDR/v1/secret/data/worker-node/$ENV/active-slot" \
+              | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['data']['ip'])")
+          fi
+          echo "WORKER_IP=$WORKER_IP" >> $GITHUB_ENV
+          echo "worker_ip=$WORKER_IP" >> $GITHUB_OUTPUT
+
+      - name: Fetch SSH key
+        run: |
+          mkdir -p keys
+          curl -sf \
+            -H "X-Vault-Token: ${{ secrets.VAULT_BOOTSTRAP_ROOT_TOKEN }}" \
+            "$VAULT_ADDR/v1/secret/data/ssh_keys/worker_node_worker" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['data']['private_key'])" \
+            > keys/worker_ssh
+          chmod 600 keys/worker_ssh
+
+      - name: Setup kubectl
+        run: |
+          mkdir -p ~/.kube
+          ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+            "cat /etc/rancher/k3s/k3s.yaml" \
+            | sed "s/127.0.0.1/$WORKER_IP/g" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Decom previous deployment if worker changed
+        run: |
+          PREV_IP=$(curl -sf \
+            -H "X-Vault-Token: ${{ secrets.VAULT_BOOTSTRAP_ROOT_TOKEN }}" \
+            "$VAULT_ADDR/v1/secret/data/$SERVICE/$ENV/active-deployment" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['data'].get('worker_node_ip',''))" \
+            2>/dev/null || echo "")
+          if [ -n "$PREV_IP" ] && [ "$PREV_IP" != "$WORKER_IP" ]; then
+            echo "Worker changed from $PREV_IP to $WORKER_IP — decommissioning old deployment"
+            OLD_KUBECONFIG=$(mktemp)
+            ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$PREV_IP \
+              "cat /etc/rancher/k3s/k3s.yaml" \
+              | sed "s/127.0.0.1/$PREV_IP/g" > "$OLD_KUBECONFIG"
+            KUBECONFIG="$OLD_KUBECONFIG" kubectl delete namespace $SERVICE --ignore-not-found || true
+            rm -f "$OLD_KUBECONFIG"
+          fi
+
+      - name: Create namespace and apply manifests
+        run: |
+          kubectl create namespace $SERVICE --dry-run=client -o yaml | kubectl apply -f -
+          cd manifests/overlays/$ENV
+          kustomize edit set image $IMAGE=$IMAGE:${{ github.sha }}
+          kubectl apply -k .
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/$SERVICE -n $SERVICE --timeout=300s
+
+      - name: Record active deployment
+        run: |
+          curl -sf \
+            -H "X-Vault-Token: ${{ secrets.VAULT_BOOTSTRAP_ROOT_TOKEN }}" \
+            -X POST \
+            -d "{\"data\":{\"worker_node_ip\":\"$WORKER_IP\"}}" \
+            "$VAULT_ADDR/v1/secret/data/$SERVICE/$ENV/active-deployment"
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf keys ~/.kube/config
+
+  register-dns:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    env:
+      ENV: ${{ github.event_name == 'push' && 'dev' || inputs.env }}
+      WORKER_IP: ${{ needs.deploy.outputs.worker_ip }}
+    steps:
+      - name: Install PyYAML
+        run: pip install pyyaml --quiet
+
+      - name: Checkout traefik-gitops
+        uses: actions/checkout@v4
+        with:
+          repository: TomasBFerreira/traefik-gitops
+          token: ${{ secrets.GH_PAT }}
+          path: traefik-gitops
+
+      - name: Compute hostname
+        run: |
+          if [ "$ENV" = "prod" ]; then
+            echo "HOSTNAME=databaes-landing-page.databaes.net" >> $GITHUB_ENV
+          else
+            echo "HOSTNAME=databaes-landing-page-dev.databaes.net" >> $GITHUB_ENV
+          fi
+
+      - name: Upsert Traefik route
+        env:
+          BACKEND: "http://${{ env.WORKER_IP }}:80"
+        run: |
+          python3 - <<'EOF'
+          import yaml, os
+
+          path = "traefik-gitops/config/dynamic/services.yml"
+          with open(path) as f:
+              cfg = yaml.safe_load(f) or {}
+
+          service   = os.environ["SERVICE"]
+          hostname  = os.environ["HOSTNAME"]
+          router    = f"{service}-router"
+          svc       = f"{service}-service"
+          backend   = os.environ["BACKEND"]
+
+          cfg.setdefault("http", {}).setdefault("routers", {})[router] = {
+              "rule": f"Host(`{hostname}`)",
+              "service": svc,
+              "entryPoints": ["websecure"],
+              "tls": {"certResolver": "cloudflare"},
+          }
+          cfg["http"].setdefault("services", {})[svc] = {
+              "loadBalancer": {"servers": [{"url": backend}]}
+          }
+
+          with open(path, "w") as f:
+              yaml.dump(cfg, f, default_flow_style=False, allow_unicode=True)
+
+          print(f"Upserted route: {hostname} → {backend}")
+          EOF
+
+      - name: Push route update
+        working-directory: traefik-gitops
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config/dynamic/services.yml
+          git diff --staged --quiet && echo "No route changes" || \
+            git commit -m "chore: upsert $SERVICE route for $ENV" && git push

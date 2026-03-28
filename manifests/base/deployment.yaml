@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: databaes-landing-page
+  namespace: databaes-landing-page
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: databaes-landing-page
+  template:
+    metadata:
+      labels:
+        app: databaes-landing-page
+    spec:
+      containers:
+        - name: databaes-landing-page
+          image: ghcr.io/tomasbferreira/databaes-landing-page:latest
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 100m
+              memory: 128Mi
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 30
