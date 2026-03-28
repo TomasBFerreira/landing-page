@@ -16,7 +16,7 @@ on:
 env:
   SERVICE: databaes-landing-page
   IMAGE: ghcr.io/tomasbferreira/databaes-landing-page
-  PORT: "80"
+  PORT: "30080"
 
 jobs:
   build-and-push:
@@ -188,7 +188,7 @@ jobs:
           kubectl get svc -n $SERVICE -o wide
           echo "=== Port 80 on worker ==="
           ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
-            'ss -tlnp | grep ":80 "' || echo "(port 80 not listed — LB pod may still be starting)"
+            'ss -tlnp | grep ":30080 "' || echo "(NodePort 30080 not yet bound — service may still be starting)"
 
       - name: Record active deployment
         run: |
@@ -226,7 +226,7 @@ jobs:
 
       - name: Upsert Traefik route
         env:
-          BACKEND: "http://${{ env.WORKER_IP }}:80"
+          BACKEND: "http://${{ env.WORKER_IP }}:${{ env.PORT }}"
         run: |
           python3 - <<'EOF'
           import yaml, os
