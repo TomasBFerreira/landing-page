@@ -183,6 +183,12 @@ jobs:
               'k3s ctr images list | grep landing-page' || true
             exit 1
           }
+          # Verify the LoadBalancer service is exposing port 80 on the node
+          echo "=== Service status ==="
+          kubectl get svc -n $SERVICE -o wide
+          echo "=== Port 80 on worker ==="
+          ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+            'ss -tlnp | grep ":80 "' || echo "(port 80 not listed — LB pod may still be starting)"
 
       - name: Record active deployment
         run: |
@@ -215,11 +221,8 @@ jobs:
 
       - name: Compute hostname
         run: |
-          if [ "$ENV" = "prod" ]; then
-            echo "HOSTNAME=databaes.net" >> $GITHUB_ENV
-          else
-            echo "HOSTNAME=dev.databaes.net" >> $GITHUB_ENV
-          fi
+          # Landing page always routes to the root domain regardless of env
+          echo "HOSTNAME=databaes.net" >> $GITHUB_ENV
 
       - name: Upsert Traefik route
         env:
