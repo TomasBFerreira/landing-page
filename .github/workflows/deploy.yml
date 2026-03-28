@@ -271,11 +271,92 @@ jobs:
           print(f"Upserted route: {hostname} → {backend}")
           EOF
 
+      - name: Patch traefik-gitops CF routing for apex domain
+        working-directory: traefik-gitops
+        run: |
+          # Fix sync-dns.yml and backfill-dns.yml to route the apex domain (databaes.net)
+          # to the dev Cloudflare tunnel instead of the (non-existent) prod tunnel.
+          # Also fix backfill to query all record types and delete conflicting A records
+          # before creating the CNAME (CF rejects CNAME creation when an A record exists).
+          python3 - <<'PYEOF'
+          import re
+
+          ROUTING_OLD = r"grep -qE '\-dev\.'"
+          ROUTING_NEW = r"grep -qE '\-dev\.|^databaes\.net$'"
+
+          # Improved GET that queries all types and handles apex A→CNAME migration
+          BACKFILL_OLD = """\
+              # Check if CNAME already exists and what it points to
+              EXISTING=$(curl -sf \\
+                "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=CNAME&name=$DOMAIN" \\
+                -H "Authorization: Bearer $CF_TOKEN")
+              COUNT=$(echo "$EXISTING" | python3 -c "import sys,json; print(json.load(sys.stdin)['result_info']['count'])")"""
+
+          BACKFILL_NEW = """\
+              # Check for any record (all types) — apex domain may have an A record instead of CNAME
+              ALL_RECORDS=$(curl -sf \\
+                "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?name=$DOMAIN" \\
+                -H "Authorization: Bearer $CF_TOKEN")
+              # Delete any non-CNAME records at this name (e.g. old A record blocking CNAME creation)
+              echo "$ALL_RECORDS" | python3 -c "
+          import sys,json
+          data=json.load(sys.stdin)['result']
+          ids=[r['id'] for r in data if r['type']!='CNAME']
+          for i in ids: print(i)
+          " | while read RID; do
+                curl -sf -X DELETE \\
+                  "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records/$RID" \\
+                  -H "Authorization: Bearer $CF_TOKEN" >/dev/null && echo "  Deleted non-CNAME record $RID for $DOMAIN"
+              done
+              # Re-fetch CNAME records after cleanup
+              EXISTING=$(curl -sf \\
+                "https://api.cloudflare.com/client/v4/zones/$ZONE_ID/dns_records?type=CNAME&name=$DOMAIN" \\
+                -H "Authorization: Bearer $CF_TOKEN")
+              COUNT=$(echo "$EXISTING" | python3 -c "import sys,json; print(json.load(sys.stdin)['result_info']['count'])")"""
+
+          patched_any = False
+          for fn in ['.github/workflows/sync-dns.yml', '.github/workflows/backfill-dns.yml']:
+              with open(fn) as f:
+                  content = f.read()
+              new = content.replace(ROUTING_OLD, ROUTING_NEW)
+              if fn.endswith('backfill-dns.yml'):
+                  new = new.replace(BACKFILL_OLD, BACKFILL_NEW)
+              if new != content:
+                  with open(fn, 'w') as f:
+                      f.write(new)
+                  print(f"Patched {fn}")
+                  patched_any = True
+              else:
+                  print(f"Already patched or pattern not found in {fn}")
+          PYEOF
+
       - name: Push route update
         working-directory: traefik-gitops
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add config/dynamic/services.yml
-          git diff --staged --quiet && echo "No route changes" || \
-            git commit -m "chore: upsert $SERVICE route for $ENV" && git push
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to push"
+          else
+            git commit -m "chore: upsert $SERVICE route + fix apex CF routing"
+            git push && echo "Push succeeded" || {
+              echo "WARNING: Push failed — GH_PAT may lack 'workflow' scope for workflow file changes"
+              echo "Attempting to push services.yml only..."
+              git reset HEAD~1 --soft
+              git restore --staged .github/
+              git stash .github/ 2>/dev/null || true
+              git commit -m "chore: upsert $SERVICE route for $ENV" -- config/dynamic/services.yml
+              git push
+            }
+          fi
+
+      - name: Trigger backfill-dns to fix existing Cloudflare CNAME
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          echo "Triggering backfill-dns.yml to update/create Cloudflare CNAME for $HOSTNAME..."
+          gh workflow run backfill-dns.yml --repo TomasBFerreira/traefik-gitops
+          echo "Backfill triggered — monitor at https://github.com/TomasBFerreira/traefik-gitops/actions"
