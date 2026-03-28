@@ -158,7 +158,18 @@ jobs:
           kubectl apply -k .
 
       - name: Wait for rollout
-        run: kubectl rollout status deployment/$SERVICE -n $SERVICE --timeout=300s
+        run: |
+          # Show pod status before waiting
+          kubectl get pods -n $SERVICE -o wide || true
+          kubectl rollout status deployment/$SERVICE -n $SERVICE --timeout=300s || {
+            echo "=== Rollout timed out — pod diagnostics ==="
+            kubectl get pods -n $SERVICE -o wide
+            kubectl describe pods -n $SERVICE | grep -A 20 "Events:"
+            # List containerd images to verify airgap import
+            ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+              'k3s ctr images list | grep landing-page' || true
+            exit 1
+          }
 
       - name: Record active deployment
         run: |

@@ -17,6 +17,7 @@ spec:
       containers:
         - name: databaes-landing-page
           image: ghcr.io/tomasbferreira/databaes-landing-page:latest
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
           resources:
