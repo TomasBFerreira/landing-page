@@ -183,12 +183,16 @@ jobs:
               'k3s ctr images list | grep landing-page' || true
             exit 1
           }
-          # Verify the LoadBalancer service is exposing port 80 on the node
+          # Verify the NodePort service is reachable
           echo "=== Service status ==="
           kubectl get svc -n $SERVICE -o wide
-          echo "=== Port 80 on worker ==="
+          echo "=== NodePort reachability test (from runner) ==="
+          curl -sf --max-time 5 http://$WORKER_IP:$PORT/ -o /dev/null -w "HTTP %{http_code}\n" \
+            && echo "NodePort 30080 is REACHABLE from runner" \
+            || echo "NodePort 30080 UNREACHABLE from runner — k3s iptables rule may need a moment"
+          echo "=== NodePort reachability test (from worker itself) ==="
           ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
-            'ss -tlnp | grep ":30080 "' || echo "(NodePort 30080 not yet bound — service may still be starting)"
+            'curl -sf --max-time 5 http://localhost:30080/ -o /dev/null -w "HTTP %{http_code}\n" && echo "localhost:30080 OK" || echo "localhost:30080 FAILED"'
 
       - name: Record active deployment
         run: |
