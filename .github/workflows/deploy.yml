@@ -141,9 +141,12 @@ jobs:
         run: |
           # VLAN 20 nodes have no internet — pull on runner using crane and stream to worker
           echo "${{ secrets.GITHUB_TOKEN }}" | crane auth login ghcr.io -u ${{ github.actor }} --password-stdin
-          crane pull $IMAGE:${{ github.sha }} - \
-            | ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
-              'k3s ctr images import -'
+          crane pull --format=tarball $IMAGE:${{ github.sha }} /tmp/landing-page-image.tar
+          scp -i keys/worker_ssh -o StrictHostKeyChecking=no \
+            /tmp/landing-page-image.tar root@$WORKER_IP:/tmp/landing-page-image.tar
+          ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+            'k3s ctr images import /tmp/landing-page-image.tar && rm /tmp/landing-page-image.tar'
+          rm /tmp/landing-page-image.tar
 
       - name: Create namespace and apply manifests
         run: |
