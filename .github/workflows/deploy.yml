@@ -47,7 +47,7 @@ jobs:
 
   deploy:
     needs: [build-and-push]
-    runs-on: ${{ github.event_name == 'push' && 'dev' || inputs.env }}
+    runs-on: ${{ fromJSON(github.event_name == 'push' && '["self-hosted","dev"]' || format('["self-hosted","{0}"]', inputs.env)) }}
     outputs:
       worker_ip: ${{ steps.resolve-ip.outputs.worker_ip }}
     env:
@@ -159,9 +159,9 @@ jobs:
       - name: Compute hostname
         run: |
           if [ "$ENV" = "prod" ]; then
-            echo "HOSTNAME=databaes-landing-page.databaes.net" >> $GITHUB_ENV
+            echo "HOSTNAME=databaes.net" >> $GITHUB_ENV
           else
-            echo "HOSTNAME=databaes-landing-page-dev.databaes.net" >> $GITHUB_ENV
+            echo "HOSTNAME=dev.databaes.net" >> $GITHUB_ENV
           fi
 
       - name: Upsert Traefik route
