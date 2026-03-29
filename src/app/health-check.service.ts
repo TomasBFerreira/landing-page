@@ -1,5 +1,7 @@
 import { Injectable, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { ServiceDef, ServiceStatus } from './models/service.model';
+import { environment } from '../environments/environment';
 
 export interface ServiceState {
   service: ServiceDef;
@@ -7,12 +9,19 @@ export interface ServiceState {
   latency: number | null;
 }
 
+interface StatusResponse {
+  id:      string;
+  status:  ServiceStatus;
+  latency: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class HealthCheckService {
   private readonly POLL_INTERVAL = 30_000;
-  private readonly TIMEOUT_MS    = 5_000;
 
   readonly states = signal<ServiceState[]>([]);
+
+  constructor(private http: HttpClient) {}
 
   init(services: ServiceDef[]): void {
     const initial: ServiceState[] = services.map(s => ({
@@ -22,32 +31,31 @@ export class HealthCheckService {
     }));
     this.states.set(initial);
 
-    this.checkAll(services);
-    setInterval(() => this.checkAll(services), this.POLL_INTERVAL);
+    this.fetchStatus(services);
+    setInterval(() => this.fetchStatus(services), this.POLL_INTERVAL);
   }
 
-  private async checkAll(services: ServiceDef[]): Promise<void> {
-    const results = await Promise.all(services.map(s => this.check(s)));
-    this.states.set(results);
-  }
-
-  private async check(service: ServiceDef): Promise<ServiceState> {
-    const start = performance.now();
-    try {
-      const ctrl = new AbortController();
-      const tid   = setTimeout(() => ctrl.abort(), this.TIMEOUT_MS);
-
-      await fetch(service.healthUrl, {
-        method: 'HEAD',
-        mode:   'no-cors',
-        cache:  'no-store',
-        signal: ctrl.signal,
-      });
-      clearTimeout(tid);
-
-      return { service, status: 'up', latency: Math.round(performance.now() - start) };
-    } catch {
-      return { service, status: 'down', latency: null };
-    }
+  private fetchStatus(services: ServiceDef[]): void {
+    this.http.get<StatusResponse[]>(environment.statusApiUrl).subscribe({
+      next: (results) => {
+        const byId = new Map(results.map(r => [r.id, r]));
+        this.states.set(
+          services.map(s => {
+            const r = byId.get(s.id);
+            return {
+              service: s,
+              status:  r?.status ?? 'unknown',
+              latency: r?.latency ?? null,
+            };
+          })
+        );
+      },
+      error: () => {
+        // Mark all as unknown if the status API itself is unreachable
+        this.states.set(
+          services.map(s => ({ service: s, status: 'unknown', latency: null }))
+        );
+      },
+    });
   }
 }

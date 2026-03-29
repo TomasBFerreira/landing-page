@@ -8,7 +8,6 @@ export interface ServiceDef {
   description: string;
   env:         ServiceEnv;
   url:         string;
-  healthUrl:   string;
   icon:        string;
   tags?:       string[];
 }
