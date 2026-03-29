@@ -4,6 +4,13 @@ kind: Kustomization
 resources:
   - ../../base
 
+configMapGenerator:
+  - name: landing-page-env
+    files:
+      - environment.json
+    options:
+      disableNameSuffixHash: true
+
 patches:
   - target:
       kind: Deployment

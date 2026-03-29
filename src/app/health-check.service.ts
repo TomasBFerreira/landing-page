@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { ServiceDef, ServiceStatus } from './models/service.model';
-import { environment } from '../environments/environment';
+import { AppConfigService } from './app-config.service';
 
 export interface ServiceState {
   service: ServiceDef;
@@ -9,10 +9,16 @@ export interface ServiceState {
   latency: number | null;
 }
 
-interface StatusResponse {
-  id:      string;
-  status:  ServiceStatus;
-  latency: number | null;
+interface ServiceResponse {
+  id:          string;
+  name:        string;
+  description: string;
+  env:         string;
+  url:         string;
+  icon:        string;
+  tags:        string[];
+  status:      ServiceStatus;
+  latency:     number | null;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -21,39 +27,36 @@ export class HealthCheckService {
 
   readonly states = signal<ServiceState[]>([]);
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private config: AppConfigService) {}
 
-  init(services: ServiceDef[]): void {
-    const initial: ServiceState[] = services.map(s => ({
-      service: s,
-      status:  'pending',
-      latency: null,
-    }));
-    this.states.set(initial);
-
-    this.fetchStatus(services);
-    setInterval(() => this.fetchStatus(services), this.POLL_INTERVAL);
+  init(): void {
+    this.fetchServices();
+    setInterval(() => this.fetchServices(), this.POLL_INTERVAL);
   }
 
-  private fetchStatus(services: ServiceDef[]): void {
-    this.http.get<StatusResponse[]>(environment.statusApiUrl).subscribe({
+  private fetchServices(): void {
+    this.http.get<ServiceResponse[]>(`${this.config.apiBaseUrl}/api/services`).subscribe({
       next: (results) => {
-        const byId = new Map(results.map(r => [r.id, r]));
         this.states.set(
-          services.map(s => {
-            const r = byId.get(s.id);
-            return {
-              service: s,
-              status:  r?.status ?? 'unknown',
-              latency: r?.latency ?? null,
-            };
-          })
+          results.map(r => ({
+            service: {
+              id:          r.id,
+              name:        r.name,
+              description: r.description,
+              env:         r.env as ServiceDef['env'],
+              url:         r.url,
+              icon:        r.icon,
+              tags:        r.tags,
+            },
+            status:  r.status,
+            latency: r.latency,
+          }))
         );
       },
       error: () => {
-        // Mark all as unknown if the status API itself is unreachable
+        // Preserve existing service definitions but mark all as unknown.
         this.states.set(
-          services.map(s => ({ service: s, status: 'unknown', latency: null }))
+          this.states().map(s => ({ ...s, status: 'unknown', latency: null }))
         );
       },
     });

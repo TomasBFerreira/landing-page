@@ -20,6 +20,10 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
+          volumeMounts:
+            - name: env-config
+              mountPath: /usr/share/nginx/html/environment.json
+              subPath: environment.json
           resources:
             requests:
               cpu: 50m
@@ -39,3 +43,7 @@ spec:
               port: 80
             initialDelaySeconds: 10
             periodSeconds: 30
+      volumes:
+        - name: env-config
+          configMap:
+            name: landing-page-env
