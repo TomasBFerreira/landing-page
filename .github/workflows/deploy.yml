@@ -236,12 +236,15 @@ jobs:
       - name: Compute hostname
         run: |
           # prod: databaes.net (root domain), dev: dev.databaes.net
+          # Service names are env-scoped so dev and prod never share a backend entry
           if [ "$ENV" = "prod" ]; then
-            echo "HOSTNAME=databaes.net"          >> $GITHUB_ENV
-            echo "ROUTER_NAME=databaes-landing-page-router" >> $GITHUB_ENV
+            echo "HOSTNAME=databaes.net"                         >> $GITHUB_ENV
+            echo "ROUTER_NAME=databaes-landing-page-router"     >> $GITHUB_ENV
+            echo "SVC_NAME=databaes-landing-page-service"       >> $GITHUB_ENV
           else
-            echo "HOSTNAME=dev.databaes.net"      >> $GITHUB_ENV
-            echo "ROUTER_NAME=dev-router"         >> $GITHUB_ENV
+            echo "HOSTNAME=dev.databaes.net"                    >> $GITHUB_ENV
+            echo "ROUTER_NAME=dev-router"                       >> $GITHUB_ENV
+            echo "SVC_NAME=databaes-landing-page-dev-service"   >> $GITHUB_ENV
           fi
 
       - name: Upsert Traefik route
@@ -255,10 +258,9 @@ jobs:
           with open(path) as f:
               cfg = yaml.safe_load(f) or {}
 
-          service   = os.environ["SERVICE"]
           hostname  = os.environ["HOSTNAME"]
           router    = os.environ["ROUTER_NAME"]
-          svc       = f"{service}-service"
+          svc       = os.environ["SVC_NAME"]
           backend   = os.environ["BACKEND"]
 
           cfg.setdefault("http", {}).setdefault("routers", {})[router] = {
@@ -273,7 +275,7 @@ jobs:
           with open(path, "w") as f:
               yaml.dump(cfg, f, default_flow_style=False, allow_unicode=True)
 
-          print(f"Upserted route: {hostname} → {backend}")
+          print(f"Upserted route: {hostname} → {backend}  (svc: {svc})")
           EOF
 
       - name: Push route update
