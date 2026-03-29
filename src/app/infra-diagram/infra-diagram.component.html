@@ -2,7 +2,7 @@
   <div class="diagram-section__header">
     <p class="section-label">infrastructure</p>
     <h2 class="section-heading">Network topology</h2>
-    <p class="diagram-section__sub">Live view of the homelab stack · dots reflect real-time health · mgmt 192.168.50.x · prod k3s VLAN 10 (192.168.10.x) · dev k3s VLAN 20 (192.168.20.x)</p>
+    <p class="diagram-section__sub">Live view of the homelab stack · dots reflect real-time health · VLAN 10 prod (192.168.10.x) · VLAN 20 dev (192.168.20.x) · Proxmox mgmt 192.168.50.x</p>
   </div>
 
   <!-- Environment selector -->
@@ -33,11 +33,11 @@
       <!-- ─── Zone backgrounds ───────────────────────────────────────── -->
       <g [style.display]="dispProd()">
         <rect class="zone zone--prod" x="20" y="240" width="524" height="348" rx="12"/>
-        <text class="zone-label zone-label--prod" x="32" y="262">PROD · mgmt 192.168.50.1xx</text>
+        <text class="zone-label zone-label--prod" x="32" y="262">PROD · VLAN 10 · 192.168.10.x</text>
       </g>
       <g [style.display]="dispDev()">
         <rect class="zone zone--dev" x="556" y="240" width="504" height="348" rx="12"/>
-        <text class="zone-label zone-label--dev" x="568" y="262">DEV · mgmt 192.168.50.2xx</text>
+        <text class="zone-label zone-label--dev" x="568" y="262">DEV · VLAN 20 · 192.168.20.x</text>
       </g>
 
       <!-- ─── CLOUDFLARE (always visible) ──────────────────────────── -->
@@ -63,7 +63,7 @@
 
       <!-- ─── LAN bus (always visible) ─────────────────────────────── -->
       <rect class="bus" x="20" y="208" width="1040" height="10" rx="5"/>
-      <text class="subnet-label" x="32" y="204">192.168.50.x · mgmt  ·  VLAN 10 · prod k3s  ·  VLAN 20 · dev k3s</text>
+      <text class="subnet-label" x="32" y="204">192.168.50.x · Proxmox mgmt  ·  VLAN 10 · prod  ·  VLAN 20 · dev</text>
 
       <!-- ═══════════════ PROD ZONE ════════════════════════════════════ -->
       <g [style.display]="dispProd()">
@@ -79,7 +79,7 @@
           <text class="node__icon" x="24" y="42">🔐</text>
           <text class="node__label" x="76" y="30">Vault HA</text>
           <text class="node__sub"   x="76" y="46">Prod · secrets</text>
-          <text class="node__sub"   x="76" y="60">.145 · .146</text>
+          <text class="node__sub"   x="76" y="60">10.45 · 10.46</text>
           <circle [class]="dotClass('vault-prod')" cx="136" cy="12" r="5"/>
         </g>
 
@@ -89,7 +89,7 @@
           <text class="node__icon" x="24" y="42">☁</text>
           <text class="node__label" x="76" y="30">Nextcloud</text>
           <text class="node__sub"   x="76" y="46">File storage</text>
-          <text class="node__sub"   x="76" y="60">.105</text>
+          <text class="node__sub"   x="76" y="60">50.105 (mgmt)</text>
           <circle [class]="dotClass('nextcloud')" cx="136" cy="12" r="5"/>
         </g>
 
@@ -99,7 +99,7 @@
           <text class="node__icon" x="24" y="42">🖥</text>
           <text class="node__label" x="76" y="28">Media Host</text>
           <text class="node__sub"   x="76" y="43">Prod · QA workloads</text>
-          <text class="node__sub"   x="76" y="57">.111</text>
+          <text class="node__sub"   x="76" y="57">50.111 (mgmt)</text>
           <circle [class]="dotClass('plex')" cx="136" cy="12" r="5"/>
         </g>
 
@@ -190,7 +190,7 @@
           <text class="node__icon" x="24" y="42">🔐</text>
           <text class="node__label" x="76" y="30">Vault HA</text>
           <text class="node__sub"   x="76" y="46">Dev · secrets</text>
-          <text class="node__sub"   x="76" y="60">.245 · .246</text>
+          <text class="node__sub"   x="76" y="60">20.45 · 20.46</text>
           <circle [class]="dotClass('vault-dev')" cx="136" cy="12" r="5"/>
         </g>
 
@@ -200,7 +200,7 @@
           <text class="node__icon" x="24" y="42">🪪</text>
           <text class="node__label" x="76" y="30">Authentik HA</text>
           <text class="node__sub"   x="76" y="46">SSO · OIDC</text>
-          <text class="node__sub"   x="76" y="60">.247 · .248</text>
+          <text class="node__sub"   x="76" y="60">20.75 · 20.76</text>
           <circle [class]="dotClass('authentik')" cx="136" cy="12" r="5"/>
         </g>
 
@@ -210,7 +210,7 @@
           <text class="node__icon" x="24" y="42">☸</text>
           <text class="node__label" x="76" y="30">K3s / Rancher</text>
           <text class="node__sub"   x="76" y="46">Dev control plane</text>
-          <text class="node__sub"   x="76" y="60">.202</text>
+          <text class="node__sub"   x="76" y="60">192.168.20.2</text>
           <circle [class]="dotClass('rancher')" cx="136" cy="12" r="5"/>
         </g>
 
@@ -223,7 +223,7 @@
           <rect class="node__bg node__bg--dev" x="0" y="0" width="88" height="52" rx="7"/>
           <text class="node__label node__label--sm" x="44" y="20">Uptime Kuma</text>
           <text class="node__sub node__sub--env" x="44" y="33">dev</text>
-          <text class="node__sub"                x="44" y="45">.202:3001</text>
+          <text class="node__sub"                x="44" y="45">20.2:3001</text>
           <circle [class]="dotClass('kuma')" cx="76" cy="8" r="4"/>
         </g>
 

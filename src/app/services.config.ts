@@ -2,10 +2,9 @@ import { ServiceDef } from './models/service.model';
 
 /**
  * IP convention:
- *   192.168.50.1xx  →  production management LXCs
- *   192.168.50.2xx  →  dev / staging management LXCs
- *   192.168.10.x    →  VLAN 10 · production k3s worker nodes (betsy)
- *   192.168.20.x    →  VLAN 20 · dev k3s worker nodes (benedict)
+ *   192.168.50.x    →  Proxmox management LAN (hypervisors + unmigrated services)
+ *   192.168.10.x    →  VLAN 10 · production services (betsy)
+ *   192.168.20.x    →  VLAN 20 · dev services (benedict)
  */
 export const SERVICES: ServiceDef[] = [
 
@@ -23,7 +22,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'vault-prod',
     name: 'Vault (prod)',
-    description: 'HashiCorp Vault HA — production secrets cluster (.145 · .146)',
+    description: 'HashiCorp Vault HA — production secrets cluster (10.45 · 10.46)',
     env: 'infra',
     url: 'https://vault.databaes.net',
     healthUrl: 'https://vault.databaes.net/v1/sys/health',
@@ -33,7 +32,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'vault-dev',
     name: 'Vault (dev)',
-    description: 'HashiCorp Vault HA — dev secrets cluster (.245 · .246)',
+    description: 'HashiCorp Vault HA — dev secrets cluster (20.45 · 20.46)',
     env: 'infra',
     url: 'https://vault-dev.databaes.net',
     healthUrl: 'https://vault-dev.databaes.net/v1/sys/health',
@@ -43,7 +42,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'authentik',
     name: 'Authentik',
-    description: 'SSO identity provider, OIDC & LDAP — HA cluster (.247 · .248)',
+    description: 'SSO identity provider, OIDC & LDAP — HA cluster (20.75 · 20.76)',
     env: 'infra',
     url: 'https://auth-dev.databaes.net',
     healthUrl: 'https://auth-dev.databaes.net/-/health/ready/',
@@ -53,7 +52,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'rancher',
     name: 'Rancher',
-    description: 'Kubernetes cluster management for k3s worker nodes (.202)',
+    description: 'Kubernetes cluster management for k3s worker nodes (192.168.20.2)',
     env: 'infra',
     url: 'https://rancher-dev.databaes.net',
     healthUrl: 'https://rancher-dev.databaes.net/healthz',
@@ -63,7 +62,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'kuma',
     name: 'Uptime Kuma',
-    description: 'Status & uptime monitoring for all services (.202:3001)',
+    description: 'Status & uptime monitoring for all services (192.168.20.2:3001)',
     env: 'infra',
     url: 'https://kumadev.databaes.net',
     healthUrl: 'https://kumadev.databaes.net',
@@ -75,7 +74,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'plex',
     name: 'Plex',
-    description: 'Media server — movies, TV & music streaming (.111:32400)',
+    description: 'Media server — movies, TV & music streaming (192.168.50.111:32400)',
     env: 'prod',
     url: 'https://plex.databaes.net',
     healthUrl: 'https://plex.databaes.net/identity',
@@ -85,7 +84,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'overseerr',
     name: 'Overseerr',
-    description: 'Media request & discovery platform (.111:5055)',
+    description: 'Media request & discovery platform (192.168.50.111:5055)',
     env: 'prod',
     url: 'https://overseerr.databaes.net',
     healthUrl: 'https://overseerr.databaes.net/api/v1/status',
@@ -95,7 +94,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'nextcloud',
     name: 'Nextcloud',
-    description: 'Self-hosted file storage & collaboration (.105)',
+    description: 'Self-hosted file storage & collaboration (192.168.50.105)',
     env: 'prod',
     url: 'https://cloud.databaes.net',
     healthUrl: 'https://cloud.databaes.net/status.php',
@@ -105,7 +104,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'qbittorrent',
     name: 'qBittorrent',
-    description: 'Torrent download client with web UI (.165:8080)',
+    description: 'Torrent download client with web UI (192.168.10.65:8080)',
     env: 'prod',
     url: 'https://torrent.databaes.net',
     healthUrl: 'https://torrent.databaes.net',
@@ -113,11 +112,11 @@ export const SERVICES: ServiceDef[] = [
     tags: ['download', '1xx'],
   },
 
-  // ── QA / Test (test workloads on .111, different ports) ──────────────────────
+  // ── QA / Test (test workloads on 192.168.50.111) ─────────────────────────────
   {
     id: 'jellyfin-test',
     name: 'Jellyfin',
-    description: 'Open-source media server — test instance (.111:8096)',
+    description: 'Open-source media server — test instance (192.168.50.111:8096)',
     env: 'qa',
     url: 'https://jellyfintest.databaes.net',
     healthUrl: 'https://jellyfintest.databaes.net/health',
@@ -127,7 +126,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'sonarr-qa',
     name: 'Sonarr',
-    description: 'TV series manager — QA instance (.111:8989)',
+    description: 'TV series manager — QA instance (192.168.50.111:8989)',
     env: 'qa',
     url: 'https://sonarrtest.databaes.net',
     healthUrl: 'https://sonarrtest.databaes.net/ping',
@@ -137,7 +136,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'radarr-qa',
     name: 'Radarr',
-    description: 'Movie collection manager — QA instance (.111:7878)',
+    description: 'Movie collection manager — QA instance (192.168.50.111:7878)',
     env: 'qa',
     url: 'https://radarrtest.databaes.net',
     healthUrl: 'https://radarrtest.databaes.net/ping',
@@ -147,7 +146,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'prowlarr-qa',
     name: 'Prowlarr',
-    description: 'Indexer manager — QA instance (.111:9696)',
+    description: 'Indexer manager — QA instance (192.168.50.111:9696)',
     env: 'qa',
     url: 'https://prowlarrtest.databaes.net',
     healthUrl: 'https://prowlarrtest.databaes.net/ping',
@@ -157,7 +156,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'overseerr-qa',
     name: 'Overseerr',
-    description: 'Media requests — QA instance (.111:5055)',
+    description: 'Media requests — QA instance (192.168.50.111:5055)',
     env: 'qa',
     url: 'https://overseerrtest.databaes.net',
     healthUrl: 'https://overseerrtest.databaes.net/api/v1/status',
@@ -167,7 +166,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'jackett-qa',
     name: 'Jackett',
-    description: 'Torrent proxy & indexer — QA instance (.111:9117)',
+    description: 'Torrent proxy & indexer — QA instance (192.168.50.111:9117)',
     env: 'qa',
     url: 'https://jacketttest.databaes.net',
     healthUrl: 'https://jacketttest.databaes.net',
@@ -177,7 +176,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'stremio-qa',
     name: 'Stremio',
-    description: 'Streaming aggregator — QA instance (.111:11470)',
+    description: 'Streaming aggregator — QA instance (192.168.50.111:11470)',
     env: 'qa',
     url: 'https://stremiotest.databaes.net',
     healthUrl: 'https://stremiotest.databaes.net',
