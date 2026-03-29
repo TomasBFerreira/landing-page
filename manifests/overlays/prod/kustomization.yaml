@@ -6,6 +6,7 @@ resources:
 
 configMapGenerator:
   - name: landing-page-env
+    namespace: databaes-landing-page
     files:
       - environment.json
     options:
