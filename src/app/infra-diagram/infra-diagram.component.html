@@ -2,7 +2,7 @@
   <div class="diagram-section__header">
     <p class="section-label">infrastructure</p>
     <h2 class="section-heading">Network topology</h2>
-    <p class="diagram-section__sub">Live view of the homelab stack · dots reflect real-time health · IP range: 1xx = prod, 2xx = dev</p>
+    <p class="diagram-section__sub">Live view of the homelab stack · dots reflect real-time health · mgmt 192.168.50.x · prod k3s VLAN 10 (192.168.10.x) · dev k3s VLAN 20 (192.168.20.x)</p>
   </div>
 
   <!-- Environment selector -->
@@ -33,11 +33,11 @@
       <!-- ─── Zone backgrounds ───────────────────────────────────────── -->
       <g [style.display]="dispProd()">
         <rect class="zone zone--prod" x="20" y="240" width="524" height="348" rx="12"/>
-        <text class="zone-label zone-label--prod" x="32" y="262">PROD · 192.168.50.1xx</text>
+        <text class="zone-label zone-label--prod" x="32" y="262">PROD · mgmt 192.168.50.1xx</text>
       </g>
       <g [style.display]="dispDev()">
         <rect class="zone zone--dev" x="556" y="240" width="504" height="348" rx="12"/>
-        <text class="zone-label zone-label--dev" x="568" y="262">DEV · 192.168.50.2xx</text>
+        <text class="zone-label zone-label--dev" x="568" y="262">DEV · mgmt 192.168.50.2xx</text>
       </g>
 
       <!-- ─── CLOUDFLARE (always visible) ──────────────────────────── -->
@@ -63,7 +63,7 @@
 
       <!-- ─── LAN bus (always visible) ─────────────────────────────── -->
       <rect class="bus" x="20" y="208" width="1040" height="10" rx="5"/>
-      <text class="subnet-label" x="32" y="204">192.168.50.x  ·  homelab LAN</text>
+      <text class="subnet-label" x="32" y="204">192.168.50.x · mgmt  ·  VLAN 10 · prod k3s  ·  VLAN 20 · dev k3s</text>
 
       <!-- ═══════════════ PROD ZONE ════════════════════════════════════ -->
       <g [style.display]="dispProd()">
@@ -122,6 +122,26 @@
           <text class="node__sub node__sub--env" x="40" y="33">prod</text>
           <text class="node__sub"                x="40" y="45">:5055</text>
           <circle [class]="dotClass('overseerr')" cx="68" cy="8" r="4"/>
+        </g>
+
+        <!-- Prod Worker VLAN 10 · 192.168.10.12 (only in prod view, not QA) -->
+        <g [style.display]="dispProdOnly()">
+          <line class="drop-line drop-line--sm" x1="452" y1="358" x2="358" y2="405"/>
+
+          <g class="node node--dev" transform="translate(310, 405)">
+            <rect class="node__bg node__bg--prod-accent" x="0" y="0" width="96" height="52" rx="7"/>
+            <text class="node__label node__label--sm" x="48" y="20">Prod Worker</text>
+            <text class="node__sub" x="48" y="33">k3s · VLAN 10</text>
+            <text class="node__sub" x="48" y="46">.10.12</text>
+          </g>
+
+          <line class="drop-line drop-line--sm" x1="358" y1="457" x2="358" y2="494"/>
+
+          <g class="node node--sm node--prod-sub" transform="translate(318, 494)">
+            <rect class="node__bg" x="0" y="0" width="80" height="44" rx="7"/>
+            <text class="node__label node__label--sm" x="40" y="19">Landing</text>
+            <text class="node__sub node__sub--env" x="40" y="33">prod · :30080</text>
+          </g>
         </g>
 
         <!-- QA sub-nodes (only when qa is active) -->
@@ -207,12 +227,12 @@
           <circle [class]="dotClass('kuma')" cx="76" cy="8" r="4"/>
         </g>
 
-        <!-- Dev worker .211 -->
+        <!-- Dev worker VLAN 20 · 192.168.20.11 -->
         <g class="node node--dev" transform="translate(848, 405)">
           <rect class="node__bg node__bg--dev" x="0" y="0" width="96" height="52" rx="7"/>
           <text class="node__label node__label--sm" x="48" y="20">Dev Worker</text>
-          <text class="node__sub" x="48" y="33">k3s · media stack</text>
-          <text class="node__sub" x="48" y="46">.211</text>
+          <text class="node__sub" x="48" y="33">k3s · VLAN 20</text>
+          <text class="node__sub" x="48" y="46">.20.11</text>
         </g>
 
         <!-- Drop lines from Dev Worker to tier-3 -->

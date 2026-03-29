@@ -19,10 +19,10 @@ export class InfraDiagramComponent {
 
   setEnv(env: Env) { this.activeEnv.set(env); }
 
-  // null = show, 'none' = hide  (used in [style.display])
-  dispProd = computed(() => (this.activeEnv() === 'prod' || this.activeEnv() === 'qa') ? null : 'none');
-  dispQa   = computed(() => this.activeEnv() === 'qa'   ? null : 'none');
-  dispDev  = computed(() => this.activeEnv() === 'dev'  ? null : 'none');
+  dispProd     = computed(() => (this.activeEnv() === 'prod' || this.activeEnv() === 'qa') ? null : 'none');
+  dispProdOnly = computed(() => this.activeEnv() === 'prod' ? null : 'none');
+  dispQa       = computed(() => this.activeEnv() === 'qa'   ? null : 'none');
+  dispDev      = computed(() => this.activeEnv() === 'dev'  ? null : 'none');
 
   statusOf(id: string): ServiceStatus {
     return this.health.states().find(s => s.service.id === id)?.status ?? 'unknown';

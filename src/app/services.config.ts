@@ -1,9 +1,11 @@
 import { ServiceDef } from './models/service.model';
 
 /**
- * IP convention for 192.168.50.x:
- *   1xx  →  production
- *   2xx  →  dev / staging
+ * IP convention:
+ *   192.168.50.1xx  →  production management LXCs
+ *   192.168.50.2xx  →  dev / staging management LXCs
+ *   192.168.10.x    →  VLAN 10 · production k3s worker nodes (betsy)
+ *   192.168.20.x    →  VLAN 20 · dev k3s worker nodes (benedict)
  */
 export const SERVICES: ServiceDef[] = [
 
@@ -183,11 +185,11 @@ export const SERVICES: ServiceDef[] = [
     tags: ['streaming', 'test'],
   },
 
-  // ── Dev (192.168.50.2xx — k3s dev worker node .211) ─────────────────────────
+  // ── Dev (192.168.50.2xx mgmt · k3s dev worker VLAN 20 → 192.168.20.11) ───────
   {
     id: 'sonarr-dev',
     name: 'Sonarr',
-    description: 'TV series manager — dev instance on k3s (.211:8989)',
+    description: 'TV series manager — dev instance on k3s (192.168.20.11:8989)',
     env: 'dev',
     url: 'https://sonarr-dev.databaes.net',
     healthUrl: 'https://sonarr-dev.databaes.net/ping',
@@ -197,7 +199,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'radarr-dev',
     name: 'Radarr',
-    description: 'Movie collection manager — dev instance on k3s (.211:7878)',
+    description: 'Movie collection manager — dev instance on k3s (192.168.20.11:7878)',
     env: 'dev',
     url: 'https://radarr-dev.databaes.net',
     healthUrl: 'https://radarr-dev.databaes.net/ping',
@@ -207,7 +209,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'prowlarr-dev',
     name: 'Prowlarr',
-    description: 'Indexer manager — dev instance on k3s (.211:9696)',
+    description: 'Indexer manager — dev instance on k3s (192.168.20.11:9696)',
     env: 'dev',
     url: 'https://prowlarr-dev.databaes.net',
     healthUrl: 'https://prowlarr-dev.databaes.net/ping',
@@ -217,7 +219,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'overseerr-dev',
     name: 'Overseerr',
-    description: 'Media requests — dev instance on k3s (.211:5055)',
+    description: 'Media requests — dev instance on k3s (192.168.20.11:5055)',
     env: 'dev',
     url: 'https://overseerr-dev.databaes.net',
     healthUrl: 'https://overseerr-dev.databaes.net/api/v1/status',
@@ -227,7 +229,7 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'wikijs',
     name: 'Wiki.js',
-    description: 'Internal knowledge base & documentation (.211:3000)',
+    description: 'Internal knowledge base & documentation (192.168.20.11:3000)',
     env: 'dev',
     url: 'https://wikijs-dev.databaes.net',
     healthUrl: 'https://wikijs-dev.databaes.net',
