@@ -155,7 +155,7 @@
             <text class="node__label node__label--sm" x="42" y="20">Sonarr</text>
             <text class="node__sub node__sub--env-qa" x="42" y="33">QA</text>
             <text class="node__sub"                   x="42" y="45">:8989</text>
-            <circle [class]="dotClass('sonarr-qa')" cx="72" cy="8" r="4"/>
+            <circle [class]="dotClass('sonarrtest')" cx="72" cy="8" r="4"/>
           </g>
 
           <g class="node node--sm node--qa-sub" transform="translate(378, 405)">
@@ -163,7 +163,7 @@
             <text class="node__label node__label--sm" x="42" y="20">Radarr</text>
             <text class="node__sub node__sub--env-qa" x="42" y="33">QA</text>
             <text class="node__sub"                   x="42" y="45">:7878</text>
-            <circle [class]="dotClass('radarr-qa')" cx="72" cy="8" r="4"/>
+            <circle [class]="dotClass('radarrtest')" cx="72" cy="8" r="4"/>
           </g>
 
           <g class="node node--sm node--qa-sub" transform="translate(470, 405)">
@@ -201,7 +201,7 @@
           <text class="node__label" x="76" y="30">Authentik HA</text>
           <text class="node__sub"   x="76" y="46">SSO · OIDC</text>
           <text class="node__sub"   x="76" y="60">20.75 · 20.76</text>
-          <circle [class]="dotClass('authentik')" cx="136" cy="12" r="5"/>
+          <circle [class]="dotClass('auth-dev')" cx="136" cy="12" r="5"/>
         </g>
 
         <!-- Rancher / K3s -->
@@ -211,7 +211,7 @@
           <text class="node__label" x="76" y="30">K3s / Rancher</text>
           <text class="node__sub"   x="76" y="46">Dev control plane</text>
           <text class="node__sub"   x="76" y="60">192.168.20.2</text>
-          <circle [class]="dotClass('rancher')" cx="136" cy="12" r="5"/>
+          <circle [class]="dotClass('rancher-dev')" cx="136" cy="12" r="5"/>
         </g>
 
         <!-- Drop lines from Rancher to tier-2 -->
@@ -224,7 +224,7 @@
           <text class="node__label node__label--sm" x="44" y="20">Uptime Kuma</text>
           <text class="node__sub node__sub--env" x="44" y="33">dev</text>
           <text class="node__sub"                x="44" y="45">20.2:3001</text>
-          <circle [class]="dotClass('kuma')" cx="76" cy="8" r="4"/>
+          <circle [class]="dotClass('kumadev')" cx="76" cy="8" r="4"/>
         </g>
 
         <!-- Dev worker VLAN 20 · 192.168.20.11 -->
