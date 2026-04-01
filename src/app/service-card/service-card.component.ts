@@ -14,7 +14,7 @@ export class ServiceCardComponent {
 
   get statusLabel(): string {
     switch (this.state.status) {
-      case 'up':      return this.state.latency ? `${this.state.latency} ms` : 'online';
+      case 'up':      return this.state.latency != null ? `${this.state.latency} ms` : 'online';
       case 'down':    return 'unreachable';
       case 'pending': return 'checking...';
       default:        return 'unknown';
