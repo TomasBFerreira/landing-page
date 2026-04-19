@@ -11,5 +11,10 @@ export const routes: Routes = [
     loadComponent: () => import('./showcase/showcase.component').then(m => m.ShowcaseComponent),
     title: 'Showcase · databaes.net',
   },
+  {
+    path: 'ai',
+    loadComponent: () => import('./ai/ai.component').then(m => m.AiComponent),
+    title: 'AI incident resolver · databaes.net',
+  },
   { path: '**', redirectTo: '' },
 ];

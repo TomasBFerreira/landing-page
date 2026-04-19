@@ -1,0 +1,81 @@
+<section class="ai">
+  <div class="ai__inner">
+
+    <header class="ai__header">
+      <p class="section-label">ai · incidents</p>
+      <h1 class="ai__title">AI-assisted incident resolution.</h1>
+      <p class="ai__lede">
+        Most self-hosted homelabs treat an alert as a page. Here, an alert
+        enters a pipeline — triage, diagnosis, remediation — that the AI
+        drives end-to-end for routine faults and hands to a human the moment
+        the blast radius or novelty gets interesting.
+      </p>
+    </header>
+
+    <section class="stats">
+      @for (s of stats; track s.label) {
+        <article class="stat">
+          <span class="stat__value mono">{{ s.value }}</span>
+          <span class="stat__label">{{ s.label }}</span>
+          <span class="stat__note">{{ s.note }}</span>
+        </article>
+      }
+    </section>
+
+    <section class="ai__section">
+      <h2 class="ai__section-title">The pipeline</h2>
+      <p class="ai__section-sub">
+        Every incident follows the same shape. Each step writes to the CMDB +
+        audit stream, so the full decision trail survives the session.
+      </p>
+
+      <ol class="flow" aria-label="AI incident-resolution pipeline">
+        @for (step of steps; track step.id; let i = $index) {
+          <li class="flow__step" [attr.data-step]="step.id" [class.flow__step--gate-human]="step.gate === 'human'" [class.flow__step--gate-auto]="step.gate === 'auto'">
+            <div class="flow__marker">
+              <span class="flow__index mono">{{ i + 1 }}</span>
+            </div>
+            <div class="flow__body">
+              <div class="flow__head">
+                <h3 class="flow__label">{{ step.label }}</h3>
+                @if (step.gate === 'human') {
+                  <span class="flow__tag flow__tag--human mono">human gate</span>
+                }
+                @if (step.gate === 'auto') {
+                  <span class="flow__tag flow__tag--auto mono">automated</span>
+                }
+              </div>
+              <p class="flow__detail">{{ step.detail }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <section class="ai__section">
+      <h2 class="ai__section-title">Design pillars</h2>
+      <div class="pillars">
+        @for (p of pillars; track p.heading) {
+          <article class="pillar">
+            <span class="pillar__icon" aria-hidden="true">{{ p.icon }}</span>
+            <h3 class="pillar__heading">{{ p.heading }}</h3>
+            <p class="pillar__body">{{ p.body }}</p>
+          </article>
+        }
+      </div>
+    </section>
+
+    <section class="ai__section ai__section--cta">
+      <h2 class="ai__section-title">Under the hood</h2>
+      <p>
+        The pipeline is implemented in <a routerLink="/showcase">the ops
+        portal mesh</a> — specifically <code>ops-portal-incidents</code> (AI
+        worker) and <code>ops-portal-infrastructure</code> (action executor).
+        The Gremlin control room that benchmarks the AI is scoped in
+        <code>ops-portal-roadmap § OP-R2</code>. Both the incident record and
+        the remediation action land in the CMDB so nothing is invisible.
+      </p>
+    </section>
+
+  </div>
+</section>
