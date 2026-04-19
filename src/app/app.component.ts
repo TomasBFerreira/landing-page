@@ -1,19 +1,17 @@
 import { Component, OnInit } from '@angular/core';
-import { HeaderComponent }      from './header/header.component';
-import { InfraDiagramComponent } from './infra-diagram/infra-diagram.component';
-import { ServicesGridComponent } from './services-grid/services-grid.component';
-import { FooterComponent }       from './footer/footer.component';
-import { HealthCheckService }    from './health-check.service';
+import { RouterOutlet } from '@angular/router';
+import { HeaderComponent } from './header/header.component';
+import { FooterComponent } from './footer/footer.component';
+import { HealthCheckService } from './health-check.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [HeaderComponent, InfraDiagramComponent, ServicesGridComponent, FooterComponent],
+  imports: [RouterOutlet, HeaderComponent, FooterComponent],
   template: `
     <app-header />
     <main>
-      <app-infra-diagram />
-      <app-services-grid />
+      <router-outlet />
     </main>
     <app-footer />
   `,

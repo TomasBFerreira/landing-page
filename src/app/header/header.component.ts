@@ -1,11 +1,12 @@
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { CommonModule }       from '@angular/common';
+import { RouterLink, RouterLinkActive } from '@angular/router';
 import { HealthCheckService } from '../health-check.service';
 
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink, RouterLinkActive],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
 })
