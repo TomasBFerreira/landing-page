@@ -1,0 +1,94 @@
+<section class="hero">
+  <div class="hero__inner">
+    <p class="hero__eyebrow mono">// homelab · self-remediating · ai-assisted</p>
+    <h1 class="hero__title">
+      A homelab that <span class="hero__title-accent">fixes itself</span>.
+    </h1>
+    <p class="hero__sub">
+      Most alerts end with a page to a human. Here they enter a pipeline —
+      triage, diagnosis, remediation — that the AI drives end-to-end for
+      routine faults, and hands to a human the moment the blast radius or
+      novelty gets interesting.
+    </p>
+    <div class="hero__badges">
+      <span class="tag tag--infra">Proxmox VE</span>
+      <span class="tag tag--infra">k3s</span>
+      <span class="tag tag--infra">Authentik SSO</span>
+      <span class="tag tag--infra">NATS</span>
+      <span class="tag tag--infra">Claude</span>
+    </div>
+  </div>
+</section>
+
+<div class="home__inner">
+
+  <section class="home__section home__section--stats">
+    @for (s of stats; track s.label) {
+      <article class="stat">
+        <span class="stat__value mono">{{ s.value }}</span>
+        <span class="stat__label">{{ s.label }}</span>
+        <span class="stat__note">{{ s.note }}</span>
+      </article>
+    }
+  </section>
+
+  <section class="home__section">
+    <p class="section-label">pipeline</p>
+    <h2 class="section-heading">How an alert becomes a resolution</h2>
+    <p class="home__section-sub">
+      Every incident follows the same shape. Each step writes to the CMDB +
+      audit stream, so the full decision trail survives the session.
+    </p>
+
+    <ol class="flow" aria-label="AI incident-resolution pipeline">
+      @for (step of steps; track step.id; let i = $index) {
+        <li class="flow__step"
+            [attr.data-step]="step.id"
+            [class.flow__step--gate-human]="step.gate === 'human'"
+            [class.flow__step--gate-auto]="step.gate === 'auto'">
+          <div class="flow__marker">
+            <span class="flow__index mono">{{ i + 1 }}</span>
+          </div>
+          <div class="flow__body">
+            <div class="flow__head">
+              <h3 class="flow__label">{{ step.label }}</h3>
+              @if (step.gate === 'human') {
+                <span class="flow__tag flow__tag--human mono">human gate</span>
+              }
+              @if (step.gate === 'auto') {
+                <span class="flow__tag flow__tag--auto mono">automated</span>
+              }
+            </div>
+            <p class="flow__detail">{{ step.detail }}</p>
+          </div>
+        </li>
+      }
+    </ol>
+  </section>
+
+  <section class="home__section">
+    <p class="section-label">design</p>
+    <h2 class="section-heading">Principles behind it</h2>
+    <div class="pillars">
+      @for (p of pillars; track p.heading) {
+        <article class="pillar">
+          <span class="pillar__icon" aria-hidden="true">{{ p.icon }}</span>
+          <h3 class="pillar__heading">{{ p.heading }}</h3>
+          <p class="pillar__body">{{ p.body }}</p>
+        </article>
+      }
+    </div>
+  </section>
+
+  <section class="home__section">
+    <p class="section-label">live</p>
+    <h2 class="section-heading">What's running right now</h2>
+    <p class="home__section-sub">
+      The pipeline watches the same surfaces shown below. Health is polled
+      every 30 s; cluster topology reflects current scheduling state.
+    </p>
+    <app-infra-diagram />
+    <app-services-grid />
+  </section>
+
+</div>

@@ -17,16 +17,6 @@
       </div>
     </a>
 
-    <nav class="header__nav" aria-label="Primary">
-      <a class="header__nav-link mono"
-         routerLink="/"
-         routerLinkActive="header__nav-link--active"
-         [routerLinkActiveOptions]="{ exact: true }">home</a>
-      <a class="header__nav-link mono"
-         routerLink="/showcase"
-         routerLinkActive="header__nav-link--active">showcase</a>
-    </nav>
-
     <div class="header__status-bar">
       <div class="header__clock mono">{{ currentTime() | date:'HH:mm:ss' }}</div>
 
