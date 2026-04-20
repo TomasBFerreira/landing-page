@@ -161,6 +161,34 @@ jobs:
             'k3s ctr images import /tmp/landing-page-image.tar && rm /tmp/landing-page-image.tar'
           rm /tmp/landing-page-image.tar
 
+      - name: Inject Grafana reader token into environment.json
+        # LP-F7: prod's environment.json ships with a __GRAFANA_READER_TOKEN__
+        # placeholder. Pull the real value from Vault and substitute in place.
+        # Dev keeps an empty grafanaToken so the frontend falls back to status-api.
+        run: |
+          TOKEN=$(curl -sf \
+            -H "X-Vault-Token: ${{ secrets.VAULT_BOOTSTRAP_ROOT_TOKEN }}" \
+            "$VAULT_ADDR/v1/secret/data/databaes-landing-page/grafana-reader-token" \
+            | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['data']['data'].get('token',''))" \
+            2>/dev/null || echo "")
+          FILE="manifests/overlays/$ENV/environment.json"
+          if grep -q "__GRAFANA_READER_TOKEN__" "$FILE"; then
+            if [ -z "$TOKEN" ]; then
+              echo "Placeholder present but Vault returned no token — aborting to avoid shipping the placeholder to the browser."
+              exit 1
+            fi
+            python3 - <<PY
+          import json, os
+          p = "$FILE"
+          with open(p) as f: d = json.load(f)
+          d['grafanaToken'] = "$TOKEN"
+          with open(p, 'w') as f: json.dump(d, f, indent=2); f.write('\n')
+          print(f"Substituted grafanaToken in {p} (token length {len('$TOKEN')})")
+          PY
+          else
+            echo "No Grafana token placeholder in $FILE — nothing to substitute."
+          fi
+
       - name: Create namespace and apply manifests
         run: |
           kubectl create namespace $SERVICE --dry-run=client -o yaml | kubectl apply -f -

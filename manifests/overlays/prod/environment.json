@@ -1,3 +1,6 @@
 {
-  "apiBaseUrl": "https://databaes-status-api.databaes.net"
+  "apiBaseUrl": "https://databaes-status-api.databaes.net",
+  "grafanaBaseUrl": "https://grafana.databaes.net",
+  "prometheusDsUid": "prometheus",
+  "grafanaToken": "__GRAFANA_READER_TOKEN__"
 }
