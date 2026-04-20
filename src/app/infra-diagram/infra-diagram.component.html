@@ -6,10 +6,22 @@
   </div>
 
   <!-- Environment selector -->
-  <div class="env-selector">
-    <button class="env-btn" [class.env-btn--active]="activeEnv() === 'prod'" (click)="setEnv('prod')">prod</button>
-    <button class="env-btn env-btn--qa" [class.env-btn--active]="activeEnv() === 'qa'" (click)="setEnv('qa')">qa</button>
-    <button class="env-btn env-btn--dev" [class.env-btn--active]="activeEnv() === 'dev'" (click)="setEnv('dev')">dev</button>
+  <div class="env-selector" role="group" aria-label="Diagram environment filter">
+    <button type="button"
+            class="env-btn"
+            [class.env-btn--active]="activeEnv() === 'prod'"
+            [attr.aria-pressed]="activeEnv() === 'prod'"
+            (click)="setEnv('prod')">prod</button>
+    <button type="button"
+            class="env-btn env-btn--qa"
+            [class.env-btn--active]="activeEnv() === 'qa'"
+            [attr.aria-pressed]="activeEnv() === 'qa'"
+            (click)="setEnv('qa')">qa</button>
+    <button type="button"
+            class="env-btn env-btn--dev"
+            [class.env-btn--active]="activeEnv() === 'dev'"
+            [attr.aria-pressed]="activeEnv() === 'dev'"
+            (click)="setEnv('dev')">dev</button>
   </div>
 
   <div class="diagram-wrap">

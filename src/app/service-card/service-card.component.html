@@ -1,9 +1,10 @@
 <a class="card" [href]="state.service.url" target="_blank" rel="noopener"
+   [attr.aria-label]="ariaLabel"
    [class.card--up]="state.status === 'up'"
    [class.card--down]="state.status === 'down'">
 
   <div class="card__header">
-    <span class="card__icon">{{ state.service.icon }}</span>
+    <span class="card__icon" aria-hidden="true">{{ state.service.icon }}</span>
     @if (state.service.tags?.length) {
       <div class="card__tags">
         @for (tag of state.service.tags!.slice(0, 2); track tag) {
@@ -19,12 +20,13 @@
   <div class="card__footer">
     <div class="card__status">
       <span class="status-dot"
+            aria-hidden="true"
             [class.status-dot--up]="state.status === 'up'"
             [class.status-dot--down]="state.status === 'down'"
             [class.status-dot--pending]="state.status === 'pending'"
             [class.status-dot--unknown]="state.status === 'unknown'"></span>
       <span class="card__status-label mono">{{ statusLabel }}</span>
     </div>
-    <span class="card__arrow">↗</span>
+    <span class="card__arrow" aria-hidden="true">↗</span>
   </div>
 </a>

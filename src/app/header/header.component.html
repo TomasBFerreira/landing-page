@@ -18,10 +18,15 @@
     </a>
 
     <div class="header__status-bar">
-      <div class="header__clock mono">{{ currentTime() | date:'HH:mm:ss' }}</div>
+      <div class="header__clock mono" aria-hidden="true">{{ currentTime() | date:'HH:mm:ss' }}</div>
 
-      <div class="header__status-pill" [class.header__status-pill--ok]="allUp()">
+      <div class="header__status-pill"
+           role="status"
+           aria-live="polite"
+           aria-atomic="true"
+           [class.header__status-pill--ok]="allUp()">
         <span class="status-dot"
+              aria-hidden="true"
               [class.status-dot--up]="allUp()"
               [class.status-dot--pending]="!allUp() && downCount() === 0"
               [class.status-dot--down]="downCount() > 0"></span>
@@ -32,12 +37,12 @@
         </span>
       </div>
 
-      <div class="header__counts mono">
-        <span class="header__count header__count--up">{{ upCount() }} up</span>
-        <span class="header__sep">/</span>
-        <span class="header__count header__count--down">{{ downCount() }} down</span>
-        <span class="header__sep">/</span>
-        <span class="header__count">{{ total() }} total</span>
+      <div class="header__counts mono" [attr.aria-label]="'Service counts: ' + upCount() + ' up, ' + downCount() + ' down, ' + total() + ' total'">
+        <span class="header__count header__count--up" aria-hidden="true">{{ upCount() }} up</span>
+        <span class="header__sep" aria-hidden="true">/</span>
+        <span class="header__count header__count--down" aria-hidden="true">{{ downCount() }} down</span>
+        <span class="header__sep" aria-hidden="true">/</span>
+        <span class="header__count" aria-hidden="true">{{ total() }} total</span>
       </div>
     </div>
 
