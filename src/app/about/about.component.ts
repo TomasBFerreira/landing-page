@@ -1,56 +1,44 @@
 import { Component } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
+
+interface RunningProject {
+  name: string;
+  summary: string;
+}
 
 @Component({
   selector: 'app-about',
   standalone: true,
+  imports: [CommonModule, RouterLink],
   templateUrl: './about.component.html',
   styleUrl: './about.component.scss',
 })
 export class AboutComponent {
-  readonly milestones = [
+  readonly projects: RunningProject[] = [
     {
-      year: '2022',
-      title: 'The first server',
-      body: 'A single N100 mini-PC in the corner of the office. One Proxmox install, one VM, one reason to start: stop paying for cloud storage.',
+      name: 'Ops Portal',
+      summary: 'Eight Go microservices (cmdb, audit, deployments, domain, identity, incidents, infrastructure, shell) behind an Angular admin UI. The control plane for the rest of the homelab.',
     },
     {
-      year: '2023',
-      title: 'From a VM to a cluster',
-      body: 'Three nodes joined the Proxmox cluster. k3s landed on top, Traefik became the front door, and the first self-hosted services (Nextcloud, Sonarr + Radarr) moved in.',
+      name: 'Tomaj Flix (streambox)',
+      summary: 'Self-hosted streaming platform. Go backend scans a media library, pulls TMDB metadata, downloads subtitles on demand. SvelteKit frontend plays in the browser.',
     },
     {
-      year: '2024',
-      title: 'SSO, Vault, and a control plane',
-      body: 'Authentik slotted in as the identity layer. Vault took over secrets. The first generation of the ops portal replaced a pile of ad-hoc kubectl commands.',
+      name: 'Wiki.js',
+      summary: 'Operations wiki mirroring repo-side infra docs, runbooks, and per-service pages. Deployed across dev, QA, and prod clusters.',
     },
     {
-      year: '2025',
-      title: 'Blue / green + GitOps everywhere',
-      body: 'Blue-green worker slots, Traefik GitOps with Cloudflare DNS sync, and an AI-assisted incident workflow that turns alerts into runbook executions.',
+      name: 'Media stack',
+      summary: 'Sonarr, Radarr, Prowlarr, and Seerr working together to request, find, and land media. Feeds straight into the Tomaj Flix library.',
     },
     {
-      year: '2026',
-      title: 'Microservices, not a monolith',
-      body: 'The ops portal split into eight focused services on a shared template. Wiki.js joined as the long-form knowledge base. Observability via Prometheus / Loki / Tempo became table stakes.',
-    },
-  ];
-
-  readonly principles = [
-    {
-      heading: 'Self-hosted by default',
-      body: 'Where a self-hosted equivalent meets the need, it wins. Data lives on disks I can touch; account identity lives in Authentik, not someone else\'s auth provider.',
+      name: 'Nextcloud',
+      summary: 'Self-hosted file sync + CalDAV/CardDAV. Replaces the Dropbox / Google Drive slot in the stack.',
     },
     {
-      heading: 'GitOps is the audit trail',
-      body: 'Every change is a PR. Every PR is a deploy. The git log is the deployment history, the CMDB captures the business-impact layer on top.',
-    },
-    {
-      heading: 'Automation follows a human, not the other way around',
-      body: 'AI handles triage and routine remediation. Humans stay in the loop for anything with real blast radius.',
-    },
-    {
-      heading: 'Observability is not optional',
-      body: 'If a service doesn\'t emit metrics, logs, and traces, it\'s not finished. Monitoring is a first-class citizen of every deploy.',
+      name: 'Observability (otel-monitoring)',
+      summary: 'Prometheus, Loki, Tempo, and Grafana on a central monitoring host. Every service emits OTel signals to the same place.',
     },
   ];
 }
