@@ -14,7 +14,13 @@
     .card__arrow { color: var(--orange); opacity: 1; }
   }
 
-  &--down { opacity: 0.6; }
+  &--down {
+    // Use a border tint + the red status-dot to signal "down" instead of
+    // dimming the whole card with opacity — opacity halves text contrast
+    // and drops the card below WCAG AA.
+    border-color: rgba(239, 68, 68, 0.35);
+    .card__icon { opacity: 0.55; }
+  }
 }
 
 .card__header {
