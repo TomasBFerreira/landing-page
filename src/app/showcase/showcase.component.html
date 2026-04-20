@@ -1,0 +1,92 @@
+<section class="showcase">
+  <div class="showcase__inner">
+
+    <header class="showcase__header">
+      <p class="section-label">showcase · ai integration</p>
+      <h1 class="showcase__title">How AI sits inside the stack</h1>
+      <p class="showcase__sub">
+        The interesting part of putting a model in a homelab isn't the model —
+        it's the integration: where it runs, what it gets to see, what it's
+        allowed to write, and how we know it's still behaving. This page walks
+        through those choices.
+      </p>
+    </header>
+
+    <!-- Integration points — the "where / read / write" grid -->
+    <section class="block">
+      <p class="section-label">integration</p>
+      <h2 class="section-heading">Surface area</h2>
+      <p class="block__sub">
+        Three surfaces: where the model lives, what it consumes, and what it
+        changes. Keeping these small and explicit is most of the engineering.
+      </p>
+
+      <div class="points">
+        @for (p of integrationPoints; track p.heading) {
+          <article class="point" [attr.data-kind]="p.kind">
+            <span class="point__kind mono">{{ p.kind }}</span>
+            <h3 class="point__heading">{{ p.heading }}</h3>
+            <p class="point__body">{{ p.body }}</p>
+          </article>
+        }
+      </div>
+    </section>
+
+    <!-- Pipeline — framed as "shape of the integration" -->
+    <section class="block">
+      <p class="section-label">shape</p>
+      <h2 class="section-heading">The path a signal walks</h2>
+      <p class="block__sub">
+        Same path every time. Most steps aren't the model — they're the
+        scaffolding that makes the model's two jobs (triage + propose) safe
+        to plug in.
+      </p>
+
+      <ol class="flow" aria-label="AI incident-resolution pipeline">
+        @for (step of steps; track step.id; let i = $index) {
+          <li class="flow__step"
+              [attr.data-step]="step.id"
+              [class.flow__step--gate-human]="step.gate === 'human'"
+              [class.flow__step--gate-auto]="step.gate === 'auto'">
+            <div class="flow__marker">
+              <span class="flow__index mono">{{ i + 1 }}</span>
+            </div>
+            <div class="flow__body">
+              <div class="flow__head">
+                <h3 class="flow__label">{{ step.label }}</h3>
+                @if (step.gate === 'human') {
+                  <span class="flow__tag flow__tag--human mono">human gate</span>
+                }
+                @if (step.gate === 'auto') {
+                  <span class="flow__tag flow__tag--auto mono">automated</span>
+                }
+              </div>
+              <p class="flow__detail">{{ step.detail }}</p>
+            </div>
+          </li>
+        }
+      </ol>
+    </section>
+
+    <!-- Design choices — the pillars, reframed -->
+    <section class="block">
+      <p class="section-label">choices</p>
+      <h2 class="section-heading">Design decisions, not slogans</h2>
+      <p class="block__sub">
+        The four things that actually change how the system behaves when the
+        model is wrong, slow, or unavailable.
+      </p>
+
+      <div class="choices">
+        @for (c of choices; track c.heading) {
+          <article class="choice">
+            <span class="choice__icon" aria-hidden="true">{{ c.icon }}</span>
+            <h3 class="choice__heading">{{ c.heading }}</h3>
+            <p class="choice__body">{{ c.body }}</p>
+          </article>
+        }
+      </div>
+    </section>
+
+  </div>
+</section>
