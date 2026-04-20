@@ -132,3 +132,39 @@ a:hover { text-decoration: underline; }
 @keyframes dash-flow {
   to { stroke-dashoffset: -20; }
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 12px;
+  z-index: 10000;
+  padding: 8px 16px;
+  background: var(--surface);
+  border: 1px solid var(--orange);
+  border-radius: 6px;
+  color: var(--orange);
+  font-family: var(--mono);
+  font-size: 13px;
+  text-decoration: none;
+  transition: top 0.15s;
+
+  &:focus {
+    top: 12px;
+    text-decoration: none;
+  }
+}

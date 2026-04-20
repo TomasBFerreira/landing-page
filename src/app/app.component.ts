@@ -9,8 +9,9 @@ import { HealthCheckService } from './health-check.service';
   standalone: true,
   imports: [RouterOutlet, HeaderComponent, FooterComponent],
   template: `
+    <a class="skip-link" href="#main-content">Skip to main content</a>
     <app-header />
-    <main>
+    <main id="main-content" tabindex="-1">
       <router-outlet />
     </main>
     <app-footer />
