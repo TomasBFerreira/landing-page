@@ -47,33 +47,46 @@
 }
 
 .hero__title {
-  font-size: clamp(40px, 6vw, 72px);
+  font-size: clamp(48px, 8vw, 96px);
   font-weight: 700;
   line-height: 1.05;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.04em;
   margin-bottom: 20px;
-  max-width: 14ch;
 }
 
 .hero__title-accent { color: var(--orange); }
+.hero__title-dim    { color: var(--text-dim); font-weight: 500; }
 
 .hero__sub {
   font-size: 16px;
   color: var(--text-muted);
   line-height: 1.7;
-  max-width: 600px;
-  margin-bottom: 28px;
+  max-width: 640px;
+  margin-bottom: 24px;
 }
 
 .hero__badges {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 24px;
+}
+
+.hero__meta {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.hero__link {
+  color: var(--orange);
+  text-decoration: none;
+
+  &:hover { text-decoration: underline; }
 }
 
 // ── Home body ────────────────────────────────────────────────────────────────
 .home__inner {
-  max-width: 1100px;
+  max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px 80px;
 }
@@ -89,179 +102,4 @@
   margin-top: 6px;
   margin-bottom: 20px;
   max-width: 640px;
-}
-
-// ── Stats row ────────────────────────────────────────────────────────────────
-.home__section--stats {
-  margin-top: -28px;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 14px;
-  position: relative;
-  z-index: 2;
-}
-
-.stat {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 20px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-}
-
-.stat__value {
-  font-size: 32px;
-  font-weight: 700;
-  color: var(--orange);
-  letter-spacing: -0.04em;
-  line-height: 1;
-}
-
-.stat__label {
-  font-size: 13px;
-  color: var(--text);
-  font-weight: 500;
-}
-
-.stat__note {
-  font-size: 12px;
-  color: var(--text-muted);
-  line-height: 1.55;
-}
-
-// ── Pipeline flow ────────────────────────────────────────────────────────────
-.flow {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-}
-
-.flow__step {
-  position: relative;
-  display: grid;
-  grid-template-columns: 48px 1fr;
-  gap: 16px;
-  padding: 14px 0;
-
-  &:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: 23px;
-    top: 44px;
-    bottom: -6px;
-    width: 2px;
-    background: var(--border);
-  }
-
-  &--gate-human .flow__marker,
-  &--gate-auto  .flow__marker {
-    border-color: var(--orange);
-    background: rgba(249, 115, 22, 0.1);
-  }
-}
-
-.flow__marker {
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
-  z-index: 1;
-}
-
-.flow__index {
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--orange);
-}
-
-.flow__head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-bottom: 4px;
-}
-
-.flow__label {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-  margin: 0;
-}
-
-.flow__tag {
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 2px 8px;
-  border-radius: 99px;
-  border: 1px solid;
-
-  &--human {
-    color: var(--yellow);
-    border-color: rgba(234, 179, 8, 0.35);
-    background: rgba(234, 179, 8, 0.08);
-  }
-
-  &--auto {
-    color: var(--green);
-    border-color: rgba(34, 197, 94, 0.35);
-    background: rgba(34, 197, 94, 0.08);
-  }
-}
-
-.flow__detail {
-  font-size: 13.5px;
-  color: var(--text-muted);
-  line-height: 1.65;
-  margin: 0;
-}
-
-// ── Pillars ──────────────────────────────────────────────────────────────────
-.pillars {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 16px;
-}
-
-.pillar {
-  padding: 20px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: border-color 0.15s, background 0.15s;
-
-  &:hover {
-    border-color: rgba(249, 115, 22, 0.35);
-    background: var(--surface-2);
-  }
-}
-
-.pillar__icon {
-  font-size: 24px;
-  display: block;
-  margin-bottom: 8px;
-}
-
-.pillar__heading {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--orange);
-  margin: 0 0 6px;
-}
-
-.pillar__body {
-  font-size: 13px;
-  color: var(--text-muted);
-  line-height: 1.7;
-  margin: 0;
 }
