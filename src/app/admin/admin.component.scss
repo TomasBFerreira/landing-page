@@ -57,7 +57,7 @@
   transition: border-color 0.15s, background 0.15s;
 
   &:hover {
-    border-color: rgba(249, 115, 22, 0.4);
+    border-color: rgba(var(--c-orange), 0.40);
     background: var(--surface-2);
     text-decoration: none;
   }
@@ -147,15 +147,15 @@
 .activity__id    { color: var(--text-dim); font-size: 11px; }
 .activity__risk  {
   padding: 1px 6px; border-radius: 3px;
-  background: rgba(234, 179, 8, 0.10);
+  background: rgba(var(--c-yellow), 0.12);
   color: var(--yellow);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 .activity__type  {
   padding: 1px 6px; border-radius: 3px;
-  background: rgba(99, 102, 241, 0.10);
-  color: #818cf8;
+  background: rgba(var(--c-indigo), 0.10);
+  color: rgb(79, 70, 229);
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
@@ -165,9 +165,9 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
 
-  &--critical { background: rgba(239, 68, 68, 0.12); color: var(--red); }
-  &--warning  { background: rgba(234, 179, 8, 0.12); color: var(--yellow); }
-  &--info     { background: rgba(96, 165, 250, 0.12); color: #60a5fa; }
+  &--critical { background: rgba(var(--c-red), 0.12); color: var(--red); }
+  &--warning  { background: rgba(var(--c-yellow), 0.12); color: var(--yellow); }
+  &--info     { background: rgba(37, 99, 235, 0.12); color: rgb(37, 99, 235); }
 }
 
 .status-chip {
@@ -178,10 +178,10 @@
   background: var(--surface-3);
   color: var(--text-muted);
 
-  &--open, &--investigating, &--in-progress { background: rgba(234, 179, 8, 0.12); color: var(--yellow); }
-  &--resolved, &--completed                 { background: rgba(34, 197, 94, 0.12); color: var(--green); }
-  &--cancelled, &--wontfix, &--rolled-back  { background: rgba(239, 68, 68, 0.12); color: var(--red); }
-  &--draft, &--approved                     { background: rgba(96, 102, 241, 0.12); color: #818cf8; }
+  &--open, &--investigating, &--in-progress { background: rgba(var(--c-yellow), 0.12); color: var(--yellow); }
+  &--resolved, &--completed                 { background: rgba(var(--c-green), 0.12); color: var(--green); }
+  &--cancelled, &--wontfix, &--rolled-back  { background: rgba(var(--c-red), 0.12); color: var(--red); }
+  &--draft, &--approved                     { background: rgba(var(--c-indigo), 0.12); color: rgb(79, 70, 229); }
 }
 
 .activity__title {

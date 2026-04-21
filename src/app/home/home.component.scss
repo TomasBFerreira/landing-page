@@ -2,10 +2,12 @@
 .hero {
   background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
   border-bottom: 1px solid var(--border);
-  padding: 88px 0 72px;
+  padding: 96px 0 88px;
   position: relative;
   overflow: hidden;
 
+  // Subtle terminal grid. Opacity calibrated per theme via --border so the
+  // grid is visible-but-quiet in dark and just-barely in light.
   &::before {
     content: '';
     position: absolute;
@@ -13,18 +15,20 @@
     background-image:
       linear-gradient(var(--border) 1px, transparent 1px),
       linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 40px 40px;
-    opacity: 0.2;
+    background-size: 44px 44px;
+    opacity: 0.45;
+    mask-image: radial-gradient(ellipse at top, black 20%, transparent 70%);
+    -webkit-mask-image: radial-gradient(ellipse at top, black 20%, transparent 70%);
   }
 
   &::after {
     content: '';
     position: absolute;
-    top: -80px;
+    top: -120px;
     left: 50%;
     transform: translateX(-50%);
-    width: 600px;
-    height: 300px;
+    width: 760px;
+    height: 380px;
     background: radial-gradient(ellipse, var(--orange-glow) 0%, transparent 70%);
     pointer-events: none;
   }
@@ -40,36 +44,36 @@
 
 .hero__eyebrow {
   font-size: 12px;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   color: var(--orange);
-  margin-bottom: 16px;
-  opacity: 0.8;
+  margin-bottom: 20px;
 }
 
 .hero__title {
-  font-size: clamp(48px, 8vw, 96px);
+  font-size: clamp(44px, 7.5vw, 88px);
   font-weight: 700;
-  line-height: 1.05;
-  letter-spacing: -0.04em;
-  margin-bottom: 20px;
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  margin-bottom: 24px;
+  color: var(--text);
 }
 
 .hero__title-accent { color: var(--orange); }
 .hero__title-dim    { color: var(--text-dim); font-weight: 500; }
 
 .hero__sub {
-  font-size: 16px;
+  font-size: 17px;
   color: var(--text-muted);
   line-height: 1.7;
-  max-width: 640px;
-  margin-bottom: 24px;
+  max-width: 680px;
+  margin-bottom: 28px;
 }
 
 .hero__badges {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .hero__meta {
@@ -88,11 +92,11 @@
 .home__inner {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 0 24px 80px;
+  padding: 0 24px 88px;
 }
 
 .home__section {
-  margin-top: 56px;
+  margin-top: 72px;
 }
 
 .home__section-sub {
@@ -100,6 +104,6 @@
   color: var(--text-muted);
   line-height: 1.7;
   margin-top: 6px;
-  margin-bottom: 20px;
-  max-width: 640px;
+  margin-bottom: 24px;
+  max-width: 680px;
 }

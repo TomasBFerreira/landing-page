@@ -52,19 +52,19 @@
   &--active {
     border-color: var(--orange);
     color: var(--orange);
-    background: rgba(249, 115, 22, 0.08);
+    background: rgba(var(--c-orange), 0.10);
   }
 
   &--qa.env-btn--active {
     border-color: var(--yellow);
     color: var(--yellow);
-    background: rgba(234, 179, 8, 0.08);
+    background: rgba(var(--c-yellow), 0.10);
   }
 
   &--dev.env-btn--active {
     border-color: var(--green);
     color: var(--green);
-    background: rgba(34, 197, 94, 0.08);
+    background: rgba(var(--c-green), 0.10);
   }
 }
 
@@ -120,15 +120,15 @@
   transition: border-color 0.15s, background 0.15s;
 
   &:hover {
-    border-color: rgba(249, 115, 22, 0.35);
+    border-color: rgba(var(--c-orange), 0.35);
     background: var(--surface-2);
   }
 
-  &[data-type="network"]        { border-left: 3px solid #818cf8; }
+  &[data-type="network"]        { border-left: 3px solid rgb(79, 70, 229); }
   &[data-type="infrastructure"] { border-left: 3px solid var(--orange); }
   &[data-type="service"]        { border-left: 3px solid var(--green); }
   &[data-type="application"]    { border-left: 3px solid var(--yellow); }
-  &[data-type="database"]       { border-left: 3px solid #38bdf8; }
+  &[data-type="database"]       { border-left: 3px solid rgb(2, 132, 199); }
 }
 
 .node-card__head {

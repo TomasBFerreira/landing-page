@@ -1,9 +1,11 @@
 // ── Env colour tokens ─────────────────────────────────────────────────────────
+// Using tint channels so alpha mixes over any theme surface; the fg colour
+// is pinned to the theme's own var so light/dark both hit AA contrast.
 $env-colors: (
-  infra: (#818cf8, rgba(99,102,241,0.12), rgba(99,102,241,0.25)),
-  prod:  (#22c55e, rgba(34,197,94,0.1),   rgba(34,197,94,0.3)),
-  qa:    (#eab308, rgba(234,179,8,0.1),   rgba(234,179,8,0.3)),
-  dev:   (#f97316, rgba(249,115,22,0.1),  rgba(249,115,22,0.3)),
+  infra: ('c-indigo',  'text-muted'),
+  prod:  ('c-green',   'green'),
+  qa:    ('c-yellow',  'yellow'),
+  dev:   ('c-orange',  'orange'),
 );
 
 .grid-section {
@@ -27,18 +29,20 @@ $env-colors: (
   border: 1px solid var(--border);
   overflow: hidden;
 
-  // Left accent stripe — coloured per env
-  @each $env, $colors in $env-colors {
+  // Left accent stripe — coloured per env via shared tint channels.
+  @each $env, $pair in $env-colors {
+    $tint: nth($pair, 1);
+    $fg:   nth($pair, 2);
     &--#{$env} {
-      border-left: 3px solid nth($colors, 3);
+      border-left: 3px solid rgba(var(--#{$tint}), 0.35);
 
       .env-group__badge--#{$env} {
-        background: nth($colors, 2);
-        border-color: nth($colors, 3);
-        color: nth($colors, 1);
+        background: rgba(var(--#{$tint}), 0.12);
+        border-color: rgba(var(--#{$tint}), 0.30);
+        color: var(--#{$fg});
       }
 
-      .env-group__stat-up { color: nth($colors, 1); }
+      .env-group__stat-up { color: var(--#{$fg}); }
     }
   }
 }
@@ -106,7 +110,7 @@ $env-colors: (
       z-index: 1;
       position: relative;
       border-radius: var(--radius);
-      box-shadow: 0 0 0 1px rgba(249,115,22,0.4), 0 8px 24px rgba(0,0,0,0.3);
+      box-shadow: 0 0 0 1px var(--orange-glow-strong), var(--shadow-md);
     }
   }
 }

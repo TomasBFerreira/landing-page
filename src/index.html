@@ -5,7 +5,26 @@
   <title>databaes.net — homelab</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <!--
+    LP-F5 theme bootstrap — runs before CSS loads so there's no flash of
+    the wrong palette on first paint. Default is light; localStorage
+    override wins; falls back to prefers-color-scheme only if no choice
+    has been made AND the user has a dark preference.
+  -->
+  <script>
+    (function () {
+      try {
+        var saved = localStorage.getItem('theme');
+        var theme = saved
+          || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (_) {
+        document.documentElement.setAttribute('data-theme', 'light');
+      }
+    })();
+  </script>
 </head>
 <body>
   <app-root></app-root>
