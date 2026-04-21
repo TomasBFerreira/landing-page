@@ -241,12 +241,15 @@ jobs:
           backend = f"http://{os.environ['WORKER_IP']}:{os.environ['APP_PORT']}"
           router  = f"directus-{env}-router"
           svc     = f"directus-{env}-service"
+          # IMPORTANT: don't set a router-level `tls:` block — Traefik v3
+          # treats that as "websecure-only", even when entryPoints includes
+          # web, and silently 404s on both entrypoints. CF terminates TLS at
+          # the edge; the tunnel carries HTTP; Traefik serves HTTP; done.
           cfg.setdefault("http", {}).setdefault("routers", {})[router] = {
             "rule": f"Host(`{host}`)",
             "service": svc,
             "entryPoints": ["web", "websecure"],
             "middlewares": ["https-scheme"],
-            "tls": {"certResolver": "letsencrypt"},
           }
           cfg["http"].setdefault("services", {})[svc] = {
             "loadBalancer": {"servers": [{"url": backend}]}
