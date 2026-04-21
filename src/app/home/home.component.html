@@ -1,27 +1,21 @@
 <section class="hero">
   <div class="hero__inner">
-    <p class="hero__eyebrow mono">// homelab · proxmox · k3s · vault · authentik</p>
+    <p class="hero__eyebrow mono">{{ hero().eyebrow }}</p>
     <h1 class="hero__title">
-      <span class="hero__title-accent">data</span>baes<span class="hero__title-dim">.net</span>
+      <span class="hero__title-accent">{{ hero().title_prefix }}</span>{{ hero().title_accent }}<span class="hero__title-dim">{{ hero().title_suffix }}</span>
     </h1>
-    <p class="hero__sub">
-      A self-hosted homelab running on bare-metal Proxmox — Kubernetes workloads
-      on k3s, secrets in Vault, SSO via Authentik, a GitOps deploy pipeline,
-      and a small AI integration in the incident path. Everything below is live.
-    </p>
+    <p class="hero__sub">{{ hero().subline }}</p>
     <div class="hero__badges">
-      <span class="tag tag--infra">Proxmox VE</span>
-      <span class="tag tag--infra">k3s</span>
-      <span class="tag tag--infra">Rancher</span>
-      <span class="tag tag--infra">Vault HA</span>
-      <span class="tag tag--infra">Authentik SSO</span>
-      <span class="tag tag--infra">Traefik</span>
-      <span class="tag tag--infra">Cloudflare</span>
+      @for (b of hero().badges; track b.label) {
+        <span class="tag tag--infra">{{ b.label }}</span>
+      }
     </div>
-    <p class="hero__meta mono">
-      Curious about the AI piece? See
-      <a class="hero__link" routerLink="/showcase">how it's integrated &rarr;</a>
-    </p>
+    @if (hero().cta_label && hero().cta_route) {
+      <p class="hero__meta mono">
+        Curious about the AI piece? See
+        <a class="hero__link" [routerLink]="hero().cta_route">{{ hero().cta_label }}</a>
+      </p>
+    }
   </div>
 </section>
 

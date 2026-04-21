@@ -3,27 +3,15 @@
 
     <header class="about__header">
       <p class="section-label">about</p>
-      <h1 class="about__title">databaes.net</h1>
-      <p class="about__lede">
-        A personal homelab run by
-        <a href="https://github.com/TomasBFerreira" target="_blank" rel="noopener">Tomas Ferreira</a>.
-        Bare-metal Proxmox underneath; a small k3s cluster on top for
-        workloads; Authentik for identity, Vault for secrets, Traefik +
-        Cloudflare for ingress (prod) and Tailscale for lower envs. Every
-        deploy goes through GitHub Actions + blue/green worker slots.
-      </p>
-      <p class="about__lede about__lede--muted">
-        This page is deliberately short. The
-        <a routerLink="/showcase">showcase</a> has the AI-integration
-        write-up; the wiki (behind SSO) has everything else — per-service
-        architecture, runbooks, diagrams.
-      </p>
+      <h1 class="about__title">{{ title() }}</h1>
+      <p class="about__lede" [innerHTML]="ledePrimaryHtml()"></p>
+      <p class="about__lede about__lede--muted" [innerHTML]="ledeSecondaryHtml()"></p>
     </header>
 
     <section class="about__section">
       <h2 class="about__section-title">What runs here</h2>
       <div class="projects">
-        @for (p of projects; track p.name) {
+        @for (p of projects(); track p.name) {
           <article class="project">
             <h3 class="project__heading">{{ p.name }}</h3>
             <p class="project__body">{{ p.summary }}</p>
