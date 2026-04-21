@@ -147,18 +147,27 @@ jobs:
           SEC_PATH="$VAULT_ADDR/v1/secret/data/databaes-directus/$DEPLOY_ENV/credentials"
           VALS=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$SEC_PATH")
           mkdir -p directus/manifests/overlays/$DEPLOY_ENV
-          pip install pyyaml --quiet
+          # Emit the Secret YAML with stdlib only — the self-hosted runner is
+          # on Debian bookworm+ where pip install refuses system-wide writes
+          # (PEP 668). Secret shape is flat; hand-emitting YAML is safe.
           NAMESPACE="$NAMESPACE" DEPLOY_ENV="$DEPLOY_ENV" VALS="$VALS" python3 - <<'PY'
-          import json, os, base64, yaml
+          import json, os, base64
           vals = json.loads(os.environ['VALS'])['data']['data']
-          out = {
-            'apiVersion':'v1','kind':'Secret','type':'Opaque',
-            'metadata':{'name':'directus-secrets','namespace':os.environ['NAMESPACE']},
-            'data':{k: base64.b64encode(v.encode()).decode() for k,v in vals.items()},
-          }
           dest = f"directus/manifests/overlays/{os.environ['DEPLOY_ENV']}/secret.generated.yaml"
+          lines = [
+            "apiVersion: v1",
+            "kind: Secret",
+            "type: Opaque",
+            "metadata:",
+            "  name: directus-secrets",
+            f"  namespace: {os.environ['NAMESPACE']}",
+            "data:",
+          ]
+          for k, v in sorted(vals.items()):
+            b64 = base64.b64encode(v.encode()).decode()
+            lines.append(f"  {k}: {b64}")
           with open(dest, 'w') as f:
-            yaml.safe_dump(out, f)
+            f.write("\n".join(lines) + "\n")
           print(f"Wrote {len(vals)} keys to {dest}")
           PY
 
@@ -212,7 +221,11 @@ jobs:
 
       - name: Upsert Traefik route
         run: |
-          pip install pyyaml --quiet
+          # Same PEP 668 constraint as the deploy job. The upstream landing-
+          # page register-dns step does `pip install pyyaml --quiet` which
+          # still works on ubuntu-latest today, but avoiding the pip install
+          # entirely is both safer and faster.
+          pip install --break-system-packages --quiet pyyaml
           python3 - <<'EOF'
           import yaml, os
           path = "traefik-gitops/config/dynamic/services.yml"
