@@ -1,0 +1,207 @@
+.admin {
+  padding: 56px 0 96px;
+}
+
+.admin__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.admin__header {
+  margin-bottom: 40px;
+  max-width: 760px;
+}
+
+.admin__title {
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin: 4px 0 14px;
+  color: var(--text);
+}
+
+.admin__sub {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.7;
+}
+
+.admin__section {
+  margin-top: 40px;
+}
+
+.admin__err    { color: var(--red); font-size: 13px; }
+.admin__muted  { color: var(--text-dim); font-size: 13px; margin-top: 6px; }
+
+// ── Admin surfaces ────────────────────────────────────────────────────────────
+.surfaces {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.surface {
+  display: grid;
+  grid-template-columns: 40px 1fr 16px;
+  gap: 12px;
+  align-items: start;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: rgba(249, 115, 22, 0.4);
+    background: var(--surface-2);
+    text-decoration: none;
+  }
+}
+
+.surface__glyph {
+  font-size: 22px;
+  color: var(--orange);
+  line-height: 1;
+  padding-top: 2px;
+  text-align: center;
+}
+
+.surface__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.surface__purpose {
+  font-size: 12.5px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0 0 6px;
+}
+
+.surface__url {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.surface__arrow {
+  color: var(--text-dim);
+  font-size: 14px;
+  align-self: center;
+}
+
+// ── Activity columns ──────────────────────────────────────────────────────────
+.activity {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.activity__col {
+  padding: 14px 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.activity__heading {
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin: 0 0 10px;
+}
+
+.activity__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.activity__item {
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+
+  &:first-child { border-top: 0; padding-top: 0; }
+}
+
+.activity__row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 10px;
+  margin-bottom: 4px;
+}
+
+.activity__id    { color: var(--text-dim); font-size: 11px; }
+.activity__risk  {
+  padding: 1px 6px; border-radius: 3px;
+  background: rgba(234, 179, 8, 0.10);
+  color: var(--yellow);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.activity__type  {
+  padding: 1px 6px; border-radius: 3px;
+  background: rgba(99, 102, 241, 0.10);
+  color: #818cf8;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.activity__sev {
+  padding: 1px 6px; border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+
+  &--critical { background: rgba(239, 68, 68, 0.12); color: var(--red); }
+  &--warning  { background: rgba(234, 179, 8, 0.12); color: var(--yellow); }
+  &--info     { background: rgba(96, 165, 250, 0.12); color: #60a5fa; }
+}
+
+.status-chip {
+  padding: 1px 6px; border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  font-size: 10px;
+  background: var(--surface-3);
+  color: var(--text-muted);
+
+  &--open, &--investigating, &--in-progress { background: rgba(234, 179, 8, 0.12); color: var(--yellow); }
+  &--resolved, &--completed                 { background: rgba(34, 197, 94, 0.12); color: var(--green); }
+  &--cancelled, &--wontfix, &--rolled-back  { background: rgba(239, 68, 68, 0.12); color: var(--red); }
+  &--draft, &--approved                     { background: rgba(96, 102, 241, 0.12); color: #818cf8; }
+}
+
+.activity__title {
+  font-size: 13px;
+  color: var(--text);
+  line-height: 1.45;
+  margin: 2px 0 4px;
+}
+
+.activity__ci {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0 0 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.activity__meta {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin: 0;
+}

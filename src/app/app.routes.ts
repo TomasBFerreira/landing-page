@@ -16,5 +16,10 @@ export const routes: Routes = [
     loadComponent: () => import('./about/about.component').then(m => m.AboutComponent),
     title: 'About · databaes.net',
   },
+  {
+    path: 'admin',
+    loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent),
+    title: 'Admin · databaes.net',
+  },
   { path: '**', redirectTo: '' },
 ];

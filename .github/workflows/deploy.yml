@@ -195,6 +195,29 @@ jobs:
             cat "$FILE"
           fi
 
+      - name: Snapshot CMDB recent activity into configmap
+        # LP-F9: same deploy-bake pattern as topology.json. Fetches the new
+        # /api/cmdb/recent-activity endpoint (anon-allowed in-cluster) and
+        # writes it to manifests/overlays/$ENV/recent-activity.json so the
+        # /admin page reads same-origin, no CORS, no auth.
+        run: |
+          FILE="manifests/overlays/$ENV/recent-activity.json"
+          SNAPSHOT=$(ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+            "curl -sf --max-time 8 'http://localhost:30092/api/cmdb/recent-activity'" \
+            2>/dev/null || echo "")
+          if [ -n "$SNAPSHOT" ] && echo "$SNAPSHOT" | python3 -c "import json,sys; json.load(sys.stdin)" 2>/dev/null; then
+            echo "$SNAPSHOT" | python3 -m json.tool > "$FILE"
+            COUNTS=$(python3 -c "
+          import json
+          d = json.load(open('$FILE'))
+          print(f\"{len(d['recent_changes'])} changes, {len(d['open_incidents'])} open incidents\")
+          ")
+            echo "CMDB recent-activity snapshot OK: $COUNTS → $FILE"
+          else
+            echo "CMDB unreachable or returned invalid JSON — keeping placeholder $FILE"
+            cat "$FILE"
+          fi
+
       - name: Inject Grafana reader token into environment.json
         # LP-F7: prod's environment.json ships with a __GRAFANA_READER_TOKEN__
         # placeholder. Pull the real value from Vault and substitute in place.
