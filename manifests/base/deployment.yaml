@@ -27,6 +27,9 @@ spec:
             - name: env-config
               mountPath: /usr/share/nginx/html/topology.json
               subPath: topology.json
+            - name: env-config
+              mountPath: /usr/share/nginx/html/recent-activity.json
+              subPath: recent-activity.json
           resources:
             requests:
               cpu: 50m

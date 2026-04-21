@@ -1,0 +1,106 @@
+<section class="admin">
+  <div class="admin__inner">
+
+    <header class="admin__header">
+      <p class="section-label">admin</p>
+      <h1 class="admin__title">Homelab control surfaces</h1>
+      <p class="admin__sub">
+        One page, every admin entry point plus a snapshot of what's moving
+        in the CMDB right now. Links go to the real thing — this page
+        doesn't proxy anything, it just saves you a bookmark folder.
+      </p>
+    </header>
+
+    <!-- Admin surfaces grid -->
+    <section class="admin__section">
+      <p class="section-label">surfaces</p>
+      <h2 class="section-heading">Where to go</h2>
+      <div class="surfaces">
+        @for (s of surfaces; track s.name) {
+          <a class="surface" [href]="s.url" target="_blank" rel="noopener"
+             [attr.aria-label]="s.name + ' — ' + s.purpose + '. Opens in a new tab.'">
+            <span class="surface__glyph" aria-hidden="true">{{ s.glyph }}</span>
+            <div class="surface__body">
+              <h3 class="surface__name">{{ s.name }}</h3>
+              <p class="surface__purpose">{{ s.purpose }}</p>
+              <span class="surface__url mono">{{ s.url }}</span>
+            </div>
+            <span class="surface__arrow" aria-hidden="true">↗</span>
+          </a>
+        }
+      </div>
+    </section>
+
+    <!-- Recent CMDB activity -->
+    <section class="admin__section">
+      <p class="section-label">cmdb · snapshot</p>
+      <h2 class="section-heading">Recent activity</h2>
+      @if (activityError()) {
+        <p class="admin__err mono">{{ activityError() }}</p>
+      } @else if (!activity()) {
+        <p class="admin__muted mono">loading recent activity…</p>
+      } @else {
+        <p class="admin__muted">
+          Snapshotted at <span class="mono">{{ activity()!.generated_at | date:'medium' }}</span>.
+          Refreshed on every landing-page redeploy.
+        </p>
+
+        <div class="activity">
+          <!-- Open incidents -->
+          <section class="activity__col">
+            <h3 class="activity__heading">Open incidents · {{ activity()!.open_incidents.length }}</h3>
+            @if (activity()!.open_incidents.length === 0) {
+              <p class="admin__muted">None open.</p>
+            }
+            <ul class="activity__list">
+              @for (i of activity()!.open_incidents; track i.id) {
+                <li class="activity__item">
+                  <div class="activity__row">
+                    <span class="activity__id mono">#{{ i.id }}</span>
+                    <span [class]="'activity__sev activity__sev--' + i.severity">{{ i.severity }}</span>
+                    <span [class]="statusClass(i.status)">{{ i.status }}</span>
+                  </div>
+                  <p class="activity__title">{{ i.title }}</p>
+                  @if (i.affected_cis.length > 0) {
+                    <p class="activity__ci mono">{{ i.affected_cis.join(' · ') }}</p>
+                  }
+                  <p class="activity__meta mono">updated {{ i.updated_at | date:'short' }}</p>
+                </li>
+              }
+            </ul>
+          </section>
+
+          <!-- Recent changes -->
+          <section class="activity__col">
+            <h3 class="activity__heading">Recent changes · {{ activity()!.recent_changes.length }}</h3>
+            @if (activity()!.recent_changes.length === 0) {
+              <p class="admin__muted">No recent changes.</p>
+            }
+            <ul class="activity__list">
+              @for (c of activity()!.recent_changes; track c.id) {
+                <li class="activity__item">
+                  <div class="activity__row">
+                    <span class="activity__id mono">#{{ c.id }}</span>
+                    <span [class]="statusClass(c.status)">{{ c.status }}</span>
+                    @if (c.risk) {
+                      <span class="activity__risk">risk:{{ c.risk }}</span>
+                    }
+                    @if (c.change_type) {
+                      <span class="activity__type">{{ c.change_type }}</span>
+                    }
+                  </div>
+                  <p class="activity__title">{{ c.title }}</p>
+                  @if (c.affected_cis.length > 0) {
+                    <p class="activity__ci mono">{{ c.affected_cis.join(' · ') }}</p>
+                  }
+                  <p class="activity__meta mono">updated {{ c.updated_at | date:'short' }}</p>
+                </li>
+              }
+            </ul>
+          </section>
+        </div>
+      }
+    </section>
+
+  </div>
+</section>
