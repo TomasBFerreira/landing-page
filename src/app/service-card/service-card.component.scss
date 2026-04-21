@@ -18,7 +18,7 @@
     // Use a border tint + the red status-dot to signal "down" instead of
     // dimming the whole card with opacity — opacity halves text contrast
     // and drops the card below WCAG AA.
-    border-color: rgba(239, 68, 68, 0.35);
+    border-color: rgba(var(--c-red), 0.45);
     .card__icon { opacity: 0.55; }
   }
 }
@@ -46,7 +46,7 @@
   font-family: var(--mono);
   font-size: 10px;
   letter-spacing: 0.05em;
-  color: #b5b5b5;
+  color: var(--text-muted);
   background: var(--surface-3);
   padding: 1px 5px;
   border-radius: 3px;

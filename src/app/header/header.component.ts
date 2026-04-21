@@ -2,6 +2,7 @@ import { Component, computed, OnInit, signal } from '@angular/core';
 import { CommonModule }       from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { HealthCheckService } from '../health-check.service';
+import { ThemeService }       from '../theme.service';
 
 @Component({
   selector: 'app-header',
@@ -18,9 +19,11 @@ export class HeaderComponent implements OnInit {
   total     = computed(() => this.health.states().length);
   allUp     = computed(() => this.downCount() === 0 && this.total() > 0 && this.upCount() === this.total());
 
-  constructor(private health: HealthCheckService) {}
+  constructor(private health: HealthCheckService, readonly theme: ThemeService) {}
 
   ngOnInit(): void {
     setInterval(() => this.currentTime.set(new Date()), 1000);
   }
+
+  toggleTheme() { this.theme.toggle(); }
 }

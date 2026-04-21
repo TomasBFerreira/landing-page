@@ -63,7 +63,7 @@
   transition: border-color 0.15s, background 0.15s;
 
   &:hover {
-    border-color: rgba(249, 115, 22, 0.3);
+    border-color: rgba(var(--c-orange), 0.30);
     background: var(--surface-2);
   }
 }

@@ -1,26 +1,70 @@
 @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&display=swap');
 
 // ── Color tokens ──────────────────────────────────────────────────────────────
+// LP-F5: two palettes. Light is default; dark is high-contrast.
+// data-theme="light" on <html> is set by the bootstrap script in index.html
+// before CSS loads so there's no flash on first paint.
+//
+// Structural tokens (radius, fonts, tag hues) are shared between palettes.
 :root {
-  --bg:         #161616;
-  --surface:    #1f1f1f;
-  --surface-2:  #272727;
-  --surface-3:  #303030;
-  --border:     #383838;
-  --orange:     #f97316;
-  --orange-dim: #c2570f;
-  --orange-glow: rgba(249, 115, 22, 0.18);
-  --orange-glow-strong: rgba(249, 115, 22, 0.35);
-  --text:       #e5e5e5;
-  --text-muted: #9a9a9a;
-  --text-dim:   #878787;
-  --green:      #22c55e;
-  --red:        #ef4444;
-  --yellow:     #eab308;
+  // Shared
   --radius:     10px;
   --radius-lg:  16px;
   --mono:       'Space Mono', 'JetBrains Mono', monospace;
   --sans:       'Inter', system-ui, sans-serif;
+
+  // Tag tint channels (palette-independent RGB triplets).
+  --c-indigo:   99,102,241;
+  --c-green:    22,163,74;
+  --c-yellow:   202,138,4;
+  --c-orange:   234,88,12;
+  --c-red:      220,38,38;
+
+  // Light palette (default) — warm off-white SaaS surface with an
+  // accessible deeper orange; text/body hits WCAG AA against surface.
+  --bg:         #fafaf9;
+  --surface:    #ffffff;
+  --surface-2:  #f5f5f4;
+  --surface-3:  #e7e5e4;
+  --border:     #d6d3d1;
+  --border-strong: #a8a29e;
+  --orange:     #c2410c;   // darker for contrast on light bg
+  --orange-hover: #9a3412;
+  --orange-dim: #9a3412;
+  --orange-glow: rgba(234, 88, 12, 0.10);
+  --orange-glow-strong: rgba(234, 88, 12, 0.22);
+  --text:       #1c1917;
+  --text-muted: #57534e;
+  --text-dim:   #78716c;
+  --green:      #15803d;
+  --red:        #b91c1c;
+  --yellow:     #a16207;
+  --scanline:   rgba(0, 0, 0, 0.015);
+  --shadow-sm:  0 1px 2px rgba(28,25,23,0.05);
+  --shadow-md:  0 4px 12px rgba(28,25,23,0.08);
+}
+
+[data-theme="dark"] {
+  --bg:         #0c0a09;
+  --surface:    #1c1917;
+  --surface-2:  #292524;
+  --surface-3:  #3a3432;
+  --border:     #44403c;
+  --border-strong: #78716c;
+  --orange:     #f97316;
+  --orange-hover: #fb923c;
+  --orange-dim: #c2570f;
+  --orange-glow: rgba(249, 115, 22, 0.18);
+  --orange-glow-strong: rgba(249, 115, 22, 0.35);
+  --text:       #f5f5f4;
+  --text-muted: #a8a29e;
+  --text-dim:   #78716c;
+  --green:      #22c55e;
+  --red:        #ef4444;
+  --yellow:     #eab308;
+  --scanline:   rgba(0, 0, 0, 0.04);
+  --shadow-sm:  0 1px 2px rgba(0,0,0,0.2);
+  --shadow-md:  0 4px 14px rgba(0,0,0,0.4);
 }
 
 // ── Reset & base ──────────────────────────────────────────────────────────────
@@ -35,8 +79,10 @@ body {
   font-size: 15px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 
-  // Subtle scanline overlay for retro feel
+  // Retro scanline — kept but calibrated per-theme via the --scanline var.
+  // Barely-there in light mode; visible-but-gentle in dark.
   &::after {
     content: '';
     position: fixed;
@@ -45,8 +91,8 @@ body {
       0deg,
       transparent,
       transparent 2px,
-      rgba(0, 0, 0, 0.04) 2px,
-      rgba(0, 0, 0, 0.04) 4px
+      var(--scanline) 2px,
+      var(--scanline) 4px
     );
     pointer-events: none;
     z-index: 9999;
@@ -54,7 +100,7 @@ body {
 }
 
 a { color: var(--orange); text-decoration: none; }
-a:hover { text-decoration: underline; }
+a:hover { color: var(--orange-hover); text-decoration: underline; }
 
 // ── Utility classes ───────────────────────────────────────────────────────────
 .mono { font-family: var(--mono); }
@@ -63,7 +109,7 @@ a:hover { text-decoration: underline; }
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 2px 8px;
+  padding: 3px 9px;
   border-radius: 4px;
   font-family: var(--mono);
   font-size: 11px;
@@ -75,10 +121,12 @@ a:hover { text-decoration: underline; }
   color: var(--text-muted);
 }
 
-.tag--infra { background: rgba(99,102,241,0.1);  border-color: rgba(99,102,241,0.3);  color: #818cf8; }
-.tag--prod  { background: rgba(34,197,94,0.1);  border-color: rgba(34,197,94,0.3);   color: var(--green);  }
-.tag--qa    { background: rgba(234,179,8,0.1);  border-color: rgba(234,179,8,0.3);   color: var(--yellow); }
-.tag--dev   { background: rgba(249,115,22,0.1); border-color: rgba(249,115,22,0.3);  color: var(--orange); }
+.tag--infra { background: rgba(var(--c-indigo), 0.10); border-color: rgba(var(--c-indigo), 0.30); color: rgb(var(--c-indigo)); }
+.tag--prod  { background: rgba(var(--c-green),  0.10); border-color: rgba(var(--c-green),  0.30); color: var(--green);  }
+.tag--qa    { background: rgba(var(--c-yellow), 0.12); border-color: rgba(var(--c-yellow), 0.30); color: var(--yellow); }
+.tag--dev   { background: rgba(var(--c-orange), 0.10); border-color: rgba(var(--c-orange), 0.30); color: var(--orange); }
+
+[data-theme="dark"] .tag--infra { color: #818cf8; }
 
 .section-label {
   font-family: var(--mono);
@@ -96,13 +144,14 @@ a:hover { text-decoration: underline; }
   font-weight: 600;
   color: var(--text);
   margin-bottom: 4px;
+  letter-spacing: -0.01em;
 }
 
 // ── Scrollbar ─────────────────────────────────────────────────────────────────
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--orange-dim); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-strong); }
 
 // ── Status dot ────────────────────────────────────────────────────────────────
 .status-dot {
@@ -113,15 +162,15 @@ a:hover { text-decoration: underline; }
   background: var(--text-dim);
   flex-shrink: 0;
 
-  &--up      { background: var(--green);  box-shadow: 0 0 6px var(--green); animation: pulse-green 2s infinite; }
-  &--down    { background: var(--red);    box-shadow: 0 0 6px var(--red); }
+  &--up      { background: var(--green);  box-shadow: 0 0 6px rgba(var(--c-green),  0.5); animation: pulse-green 2s infinite; }
+  &--down    { background: var(--red);    box-shadow: 0 0 6px rgba(var(--c-red),    0.5); }
   &--pending { background: var(--yellow); animation: blink 1s infinite; }
   &--unknown { background: var(--text-dim); }
 }
 
 @keyframes pulse-green {
-  0%, 100% { box-shadow: 0 0 4px var(--green); }
-  50%       { box-shadow: 0 0 10px var(--green), 0 0 20px rgba(34,197,94,0.3); }
+  0%, 100% { box-shadow: 0 0 4px rgba(var(--c-green), 0.35); }
+  50%       { box-shadow: 0 0 10px rgba(var(--c-green), 0.55), 0 0 20px rgba(var(--c-green), 0.25); }
 }
 
 @keyframes blink {

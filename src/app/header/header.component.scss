@@ -1,18 +1,21 @@
-// ── Header bar ────────────────────────────────────────────────────────────────
 .header {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(22, 22, 22, 0.9);
+  // Use a surface-derived background with alpha via color-mix so both
+  // themes get a translucent header that doesn't look like an opaque
+  // black block in light mode.
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
   border-bottom: 1px solid var(--border);
   backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .header__inner {
   max-width: 1280px;
   margin: 0 auto;
   padding: 0 24px;
-  height: 56px;
+  height: 60px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -21,11 +24,16 @@
 .header__brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   text-decoration: none;
   color: inherit;
 
   &:hover { text-decoration: none; }
+}
+
+.header__logo svg {
+  display: block;
+  color: var(--orange);
 }
 
 .header__wordmark {
@@ -44,7 +52,7 @@
 
 .header__tagline {
   font-size: 10px;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-dim);
 }
@@ -52,33 +60,34 @@
 .header__nav {
   display: flex;
   align-items: center;
-  gap: 20px;
-  margin-left: 28px;
+  gap: 4px;
+  margin-left: 24px;
 }
 
 .header__nav-link {
   font-size: 12px;
   color: var(--text-muted);
   text-decoration: none;
-  padding: 4px 2px;
-  border-bottom: 1px solid transparent;
-  transition: color 0.15s, border-color 0.15s;
+  padding: 6px 10px;
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
 
   &:hover {
     color: var(--text);
+    background: var(--surface-2);
     text-decoration: none;
   }
 
   &--active {
     color: var(--orange);
-    border-bottom-color: var(--orange);
+    background: var(--orange-glow);
   }
 }
 
 .header__status-bar {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex-shrink: 0;
   margin-left: auto;
 }
@@ -86,7 +95,7 @@
 .header__clock {
   font-size: 12px;
   color: var(--text-dim);
-  tabular-nums: numeric;
+  font-variant-numeric: tabular-nums;
 }
 
 .header__status-pill {
@@ -99,12 +108,12 @@
   background: var(--surface);
   font-size: 12px;
   color: var(--text-muted);
-  transition: border-color 0.3s, color 0.3s;
+  transition: border-color 0.3s, color 0.3s, background 0.3s;
 
   &--ok {
-    border-color: rgba(34, 197, 94, 0.3);
+    border-color: rgba(var(--c-green), 0.35);
     color: var(--green);
-    background: rgba(34, 197, 94, 0.05);
+    background: rgba(var(--c-green), 0.06);
   }
 }
 
@@ -120,13 +129,34 @@
 .header__count--up   { color: var(--green); }
 .header__count--down { color: var(--red); }
 
+// ── Theme toggle ──────────────────────────────────────────────────────────────
+.header__theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+
+  &:hover {
+    color: var(--orange);
+    border-color: rgba(var(--c-orange), 0.4);
+    background: var(--surface-2);
+  }
+}
+
 @media (max-width: 860px) {
   .header__counts { display: none; }
-  .header__nav { margin-left: 16px; gap: 14px; }
+  .header__nav { margin-left: 8px; gap: 2px; }
 }
 
 @media (max-width: 640px) {
-  .header__status-bar { gap: 10px; }
+  .header__status-bar { gap: 8px; }
   .header__clock { display: none; }
   .header__tagline { display: none; }
 }
