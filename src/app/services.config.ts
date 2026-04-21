@@ -8,60 +8,33 @@ import { ServiceDef } from './models/service.model';
  */
 export const SERVICES: ServiceDef[] = [
 
-  // ── Infrastructure (shared across envs) ─────────────────────────────────────
-  {
-    id: 'traefik',
-    name: 'Traefik',
-    description: 'Edge router, reverse proxy & Cloudflare tunnel termination',
-    env: 'infra',
-    url: 'https://traefik.databaes.net',
-    icon: '⇄',
-    tags: ['proxy', 'ssl', 'cloudflare'],
-  },
+  // ── Infrastructure (prod only — public FQDNs behind CF tunnel) ──────────────
   {
     id: 'vault-prod',
-    name: 'Vault (prod)',
-    description: 'HashiCorp Vault HA — production secrets cluster (10.45 · 10.46)',
+    name: 'Vault',
+    description: 'HashiCorp Vault HA — production secrets cluster',
     env: 'infra',
     url: 'https://vault.databaes.net',
     icon: '🔐',
-    tags: ['ha', 'secrets', '1xx'],
-  },
-  {
-    id: 'vault-dev',
-    name: 'Vault (dev)',
-    description: 'HashiCorp Vault HA — dev secrets cluster (20.45 · 20.46)',
-    env: 'infra',
-    url: 'https://vault-dev.databaes.net',
-    icon: '🔐',
-    tags: ['ha', 'secrets', '2xx'],
+    tags: ['ha', 'secrets'],
   },
   {
     id: 'authentik',
     name: 'Authentik',
-    description: 'SSO identity provider, OIDC & LDAP — HA cluster (20.75 · 20.76)',
+    description: 'SSO identity provider, OIDC & LDAP — HA cluster',
     env: 'infra',
-    url: 'https://auth-dev.databaes.net',
+    url: 'https://auth.databaes.net',
     icon: '🪪',
-    tags: ['ha', 'sso', 'oidc', '2xx'],
+    tags: ['ha', 'sso', 'oidc'],
   },
   {
     id: 'rancher',
     name: 'Rancher',
-    description: 'Kubernetes cluster management for k3s worker nodes (192.168.20.2)',
+    description: 'Kubernetes cluster management for k3s worker nodes',
     env: 'infra',
-    url: 'https://rancher-dev.databaes.net',
+    url: 'https://rancher.databaes.net',
     icon: '☸',
-    tags: ['k8s', 'k3s', '2xx'],
-  },
-  {
-    id: 'kuma',
-    name: 'Uptime Kuma',
-    description: 'Status & uptime monitoring for all services (192.168.20.2:3001)',
-    env: 'infra',
-    url: 'https://kumadev.databaes.net',
-    icon: '📊',
-    tags: ['monitoring', '2xx'],
+    tags: ['k8s', 'k3s'],
   },
 
   // ── Production (192.168.50.1xx) ──────────────────────────────────────────────
