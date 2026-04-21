@@ -1,201 +1,197 @@
-// ── Section wrapper ───────────────────────────────────────────────────────────
-.diagram-section { padding: 64px 0 48px; }
+.diagram-section {
+  padding: 16px 0 40px;
+}
 
-.diagram-section__header { margin-bottom: 32px; }
+.diagram-section__header {
+  margin-bottom: 16px;
+
+  code {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--orange);
+    background: var(--surface);
+    padding: 1px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+}
 
 .diagram-section__sub {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--text-muted);
+  line-height: 1.65;
+  max-width: 680px;
   margin-top: 4px;
 }
 
 // ── Env selector ──────────────────────────────────────────────────────────────
 .env-selector {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: 6px;
+  margin: 16px 0;
 }
 
 .env-btn {
   font-family: var(--mono);
   font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  padding: 6px 18px;
-  border-radius: 6px;
+  letter-spacing: 0.05em;
+  text-transform: lowercase;
+  padding: 4px 12px;
+  border-radius: 4px;
   border: 1px solid var(--border);
   background: var(--surface);
   color: var(--text-muted);
   cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 
-  &:hover { color: var(--text); border-color: rgba(34, 197, 94, 0.4); }
+  &:hover {
+    border-color: var(--orange);
+    color: var(--text);
+  }
 
   &--active {
-    color: rgba(34, 197, 94, 1);
-    border-color: rgba(34, 197, 94, 0.5);
-    background: rgba(34, 197, 94, 0.06);
-  }
-
-  &--qa#{&}--active {
-    color: rgba(234, 179, 8, 1);
-    border-color: rgba(234, 179, 8, 0.5);
-    background: rgba(234, 179, 8, 0.06);
-  }
-
-  &--dev#{&}--active {
+    border-color: var(--orange);
     color: var(--orange);
-    border-color: rgba(249, 115, 22, 0.5);
-    background: rgba(249, 115, 22, 0.06);
+    background: rgba(249, 115, 22, 0.08);
+  }
+
+  &--qa.env-btn--active {
+    border-color: var(--yellow);
+    color: var(--yellow);
+    background: rgba(234, 179, 8, 0.08);
+  }
+
+  &--dev.env-btn--active {
+    border-color: var(--green);
+    color: var(--green);
+    background: rgba(34, 197, 94, 0.08);
   }
 }
 
-// ── Diagram container ─────────────────────────────────────────────────────────
-.diagram-wrap {
+// ── Summary / status line ─────────────────────────────────────────────────────
+.topology-meta {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+
+  &__err { color: var(--red); }
+}
+
+// ── Topology grid ─────────────────────────────────────────────────────────────
+.topology {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.topology__tier-head {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.topology__tier-label {
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+
+.topology__tier-count {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.topology__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 10px;
+}
+
+// ── Node card ─────────────────────────────────────────────────────────────────
+.node-card {
+  padding: 12px 14px;
   background: var(--surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius);
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: rgba(249, 115, 22, 0.35);
+    background: var(--surface-2);
+  }
+
+  &[data-type="network"]        { border-left: 3px solid #818cf8; }
+  &[data-type="infrastructure"] { border-left: 3px solid var(--orange); }
+  &[data-type="service"]        { border-left: 3px solid var(--green); }
+  &[data-type="application"]    { border-left: 3px solid var(--yellow); }
+  &[data-type="database"]       { border-left: 3px solid #38bdf8; }
+}
+
+.node-card__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.node-card__icon {
+  font-size: 14px;
+  color: var(--text-muted);
+  width: 16px;
+  text-align: center;
+}
+
+.node-card__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  flex: 1;
   overflow: hidden;
-  padding: 16px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.diagram-svg {
-  width: 100%;
-  height: auto;
-  display: block;
-  overflow: visible;
+.node-card__desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.55;
+  margin: 4px 0 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-// ── Zone backgrounds ──────────────────────────────────────────────────────────
-.zone {
-  &--prod { fill: rgba(34, 197, 94, 0.04);  stroke: rgba(34, 197, 94, 0.15);  stroke-width: 1; }
-  &--dev  { fill: rgba(249, 115, 22, 0.04); stroke: rgba(249, 115, 22, 0.15); stroke-width: 1; }
-}
-
-.zone-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-
-  &--prod { fill: rgba(34, 197, 94, 0.5); }
-  &--dev  { fill: rgba(249, 115, 22, 0.5); }
-}
-
-// ── LAN bus ───────────────────────────────────────────────────────────────────
-.bus {
-  fill: var(--orange);
-  opacity: 0.2;
-}
-
-// ── Flow lines ────────────────────────────────────────────────────────────────
-.flow-line {
-  stroke: var(--orange);
-  stroke-width: 1.5;
-  stroke-opacity: 0.4;
-  stroke-dasharray: 6 4;
-  fill: none;
-
-  &--animated { animation: dash-flow 0.8s linear infinite; }
-}
-
-// ── Drop lines ────────────────────────────────────────────────────────────────
-.drop-line {
-  stroke: var(--border);
-  stroke-width: 1.5;
-  fill: none;
-
-  &--sm { stroke-width: 1; stroke-opacity: 0.5; }
-}
-
-// ── Subnet label ──────────────────────────────────────────────────────────────
-.subnet-label {
-  font-family: var(--mono);
-  font-size: 9px;
-  fill: var(--text-dim);
+.node-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 10px;
+  color: var(--text-dim);
   letter-spacing: 0.05em;
 }
 
-// ── Nodes ─────────────────────────────────────────────────────────────────────
-.node { cursor: default; }
-
-.node__bg {
-  fill: var(--surface-2);
-  stroke: var(--border);
-  stroke-width: 1;
-
-  // Environment-specific fills
-  &--cloud {
-    fill: var(--surface-3);
-    stroke: rgba(249, 115, 22, 0.3);
-  }
-
-  &--core {
-    fill: var(--surface-3);
-    stroke: rgba(249, 115, 22, 0.4);
-    stroke-width: 1.5;
-  }
-
-  &--prod-accent {
-    fill: var(--surface-2);
-    stroke: rgba(34, 197, 94, 0.2);
-  }
-
-  &--dev {
-    fill: var(--surface-2);
-    stroke: rgba(249, 115, 22, 0.2);
-  }
-
-  &--qa {
-    fill: rgba(234, 179, 8, 0.06);
-    stroke: rgba(234, 179, 8, 0.25);
-  }
+.node-card__type {
+  text-transform: uppercase;
+  color: var(--text-muted);
 }
 
-// ── Node labels ───────────────────────────────────────────────────────────────
-.node__icon {
-  font-size: 18px;
-  dominant-baseline: middle;
-  text-anchor: middle;
-}
+.node-card__sep { color: var(--border); }
 
-.node__label {
-  font-family: var(--mono);
-  font-size: 11px;
+.node-card__sso {
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   font-weight: 700;
-  fill: var(--text);
-  dominant-baseline: middle;
-  text-anchor: middle;
-  letter-spacing: 0.02em;
-
-  &--sm { font-size: 10px; }
 }
 
-.node__sub {
-  font-family: var(--sans);
-  font-size: 9px;
-  fill: var(--text-muted);
-  dominant-baseline: middle;
-  text-anchor: middle;
-
-  &--env    { fill: rgba(34, 197, 94, 0.8);  font-family: var(--mono); font-size: 8px; }
-  &--env-qa { fill: rgba(234, 179, 8, 0.9);  font-family: var(--mono); font-size: 8px; letter-spacing: 0.06em; }
-}
-
-// ── Status dots (SVG circles) ─────────────────────────────────────────────────
-circle.status-dot--up {
-  fill: var(--green);
-  filter: drop-shadow(0 0 4px var(--green));
-  animation: pulse-svg-green 2s infinite;
-}
-
-circle.status-dot--down    { fill: var(--red);      filter: drop-shadow(0 0 4px var(--red)); }
-circle.status-dot--pending { fill: var(--yellow);   animation: blink 1s infinite; }
-circle.status-dot--unknown { fill: var(--text-dim); }
-
-@keyframes pulse-svg-green {
-  0%, 100% { filter: drop-shadow(0 0 3px var(--green)); opacity: 1; }
-  50%       { filter: drop-shadow(0 0 8px var(--green)); opacity: 0.85; }
+@media (max-width: 540px) {
+  .topology__grid {
+    grid-template-columns: 1fr;
+  }
 }

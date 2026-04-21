@@ -9,6 +9,7 @@ configMapGenerator:
     namespace: databaes-landing-page
     files:
       - environment.json
+      - topology.json
     options:
       disableNameSuffixHash: true
 

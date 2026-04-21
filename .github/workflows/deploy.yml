@@ -161,6 +161,33 @@ jobs:
             'k3s ctr images import /tmp/landing-page-image.tar && rm /tmp/landing-page-image.tar'
           rm /tmp/landing-page-image.tar
 
+      - name: Snapshot CMDB topology into configmap
+        # LP-F8: fetch the current CI inventory from CMDB via worker-node's
+        # in-cluster NodePort (30092) and write it to
+        # manifests/overlays/$ENV/topology.json before kustomize apply. The
+        # snapshot gets mounted at /usr/share/nginx/html/topology.json and
+        # served same-origin, so the browser doesn't need CMDB reachability
+        # or auth.
+        #
+        # Using the worker as the fetch host (not the runner) keeps this
+        # unaffected by any inter-VLAN routing gaps. If CMDB is unreachable
+        # the step keeps the placeholder file so the deploy still succeeds;
+        # the UI will render "loading topology…" instead of dots.
+        run: |
+          FILE="manifests/overlays/$ENV/topology.json"
+          ENV_UPPER=$(echo "$ENV" | tr '[:lower:]' '[:upper:]')
+          SNAPSHOT=$(ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+            "curl -sf --max-time 8 'http://localhost:30092/api/cmdb/topology?env=$ENV_UPPER'" \
+            2>/dev/null || echo "")
+          if [ -n "$SNAPSHOT" ] && echo "$SNAPSHOT" | python3 -c "import json,sys; json.load(sys.stdin)" 2>/dev/null; then
+            echo "$SNAPSHOT" | python3 -m json.tool > "$FILE"
+            NODES=$(python3 -c "import json; print(len(json.load(open('$FILE'))['nodes']))")
+            echo "CMDB topology snapshot OK: $NODES nodes for $ENV_UPPER → $FILE"
+          else
+            echo "CMDB unreachable or returned invalid JSON — keeping placeholder $FILE"
+            cat "$FILE"
+          fi
+
       - name: Inject Grafana reader token into environment.json
         # LP-F7: prod's environment.json ships with a __GRAFANA_READER_TOKEN__
         # placeholder. Pull the real value from Vault and substitute in place.
