@@ -14,7 +14,7 @@
 | LP-F6 | Blind / low-vision accessibility improvements | done (primary pass) | WCAG AA contrast bumps (#5, #7, #8) + ARIA + live regions + focus ring + skip-link + prefers-reduced-motion (#11). Follow-ups: axe / Lighthouse sweep; SVG-internal a11y (deferred to LP-F8). |
 | LP-F7 | Grafana-backed status page                 | done        | Browser → Grafana `/api/datasources/proxy/uid/prometheus/api/v1/query` path shipped prod 2026-04-20. Blackbox targets expanded (otel-monitoring #8), Traefik CORS middleware (traefik-gitops #30), read-only Grafana SA + token in Vault, landing-page rewrite (#13). Dev retains status-api fallback until monitoring-LXC Tailscale routing lands. |
 | LP-F8 | Dynamic infrastructure diagrams            | done        | CMDB-driven tier grid (#15) replaces the hand-carved SVG. Endpoint in `ops-portal-cmdb` #8; snapshot baked at deploy time and served same-origin at `/topology.json`. CMDB change #417. Live-fetch path (traefik-gitops #31/#32/#33) didn't work due to an Authentik-outpost routing mystery — tracked as CMDB incident #356 for later. |
-| LP-F9 | databaes.net admin console                 | open        | Admin surface for CMS management, project TODO review, CMDB API sync — downstream of LP-F4. |
+| LP-F9 | databaes.net admin console                 | done (MVP)  | `/admin` route with a surfaces grid (Directus, Ops Portal, Wiki.js, Grafana, Rancher, Authentik) + snapshot feed of recent CMDB changes + open incidents from `/api/cmdb/recent-activity` (ops-portal-cmdb #9). Deploy-baked same-origin JSON, landing-page #25. Phase-2 follow-ups: Directus→CMDB webhook on CMS edits; Traefik forwardAuth on `/admin` if we want it private. |
 
 ## Operational follow-ups (not features)
 
