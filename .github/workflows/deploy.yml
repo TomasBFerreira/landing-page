@@ -175,14 +175,21 @@ jobs:
         # the UI will render "loading topology…" instead of dots.
         run: |
           FILE="manifests/overlays/$ENV/topology.json"
-          ENV_UPPER=$(echo "$ENV" | tr '[:lower:]' '[:upper:]')
+          # Fetch UNFILTERED — snapshot carries every env (PROD/QA/DEV) so the
+          # env selector on the landing page works without a re-deploy per
+          # env. Frontend filters client-side by activeEnv().
           SNAPSHOT=$(ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
-            "curl -sf --max-time 8 'http://localhost:30092/api/cmdb/topology?env=$ENV_UPPER'" \
+            "curl -sf --max-time 8 'http://localhost:30092/api/cmdb/topology'" \
             2>/dev/null || echo "")
           if [ -n "$SNAPSHOT" ] && echo "$SNAPSHOT" | python3 -c "import json,sys; json.load(sys.stdin)" 2>/dev/null; then
             echo "$SNAPSHOT" | python3 -m json.tool > "$FILE"
-            NODES=$(python3 -c "import json; print(len(json.load(open('$FILE'))['nodes']))")
-            echo "CMDB topology snapshot OK: $NODES nodes for $ENV_UPPER → $FILE"
+            SUMMARY=$(python3 -c "
+          import json, collections
+          d = json.load(open('$FILE'))
+          by_env = collections.Counter(n['env'] for n in d['nodes'])
+          print(f\"{len(d['nodes'])} nodes total: {dict(by_env)}\")
+          ")
+            echo "CMDB topology snapshot OK: $SUMMARY → $FILE"
           else
             echo "CMDB unreachable or returned invalid JSON — keeping placeholder $FILE"
             cat "$FILE"
