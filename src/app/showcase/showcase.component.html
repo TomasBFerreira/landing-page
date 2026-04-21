@@ -22,7 +22,7 @@
       </p>
 
       <div class="points">
-        @for (p of integrationPoints; track p.heading) {
+        @for (p of integrationPoints(); track p.heading) {
           <article class="point" [attr.data-kind]="p.kind">
             <span class="point__kind mono">{{ p.kind }}</span>
             <h3 class="point__heading">{{ p.heading }}</h3>
@@ -43,9 +43,9 @@
       </p>
 
       <ol class="flow" aria-label="AI incident-resolution pipeline">
-        @for (step of steps; track step.id; let i = $index) {
+        @for (step of steps(); track step.step_id; let i = $index) {
           <li class="flow__step"
-              [attr.data-step]="step.id"
+              [attr.data-step]="step.step_id"
               [class.flow__step--gate-human]="step.gate === 'human'"
               [class.flow__step--gate-auto]="step.gate === 'auto'">
             <div class="flow__marker">
@@ -78,7 +78,7 @@
       </p>
 
       <div class="choices">
-        @for (c of choices; track c.heading) {
+        @for (c of choices(); track c.heading) {
           <article class="choice">
             <span class="choice__icon" aria-hidden="true">{{ c.icon }}</span>
             <h3 class="choice__heading">{{ c.heading }}</h3>
