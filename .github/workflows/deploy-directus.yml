@@ -1,0 +1,258 @@
+name: Deploy Directus CMS
+
+# LP-F4 Phase 1: stands up a dedicated Postgres + Directus in the
+# `databaes-directus` namespace on the target env's k3s cluster. Follows the
+# wikijs pattern — third-party image, no build, just manifests + secret
+# seeding + kubectl apply.
+#
+# Deliberately NOT push-triggered. Landing-page code changes push-deploy to
+# the landing-page pipeline; the CMS is stood up once per env and then left
+# alone. Future schema changes (Phase 2) will ship as Directus collection
+# JSON applied through the admin API, not by re-running this workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Target environment'
+        type: choice
+        options: [prod, dev]
+        default: prod
+      worker_node_ip:
+        description: 'Worker node IP (optional — overrides Vault active-slot lookup)'
+        required: false
+        type: string
+
+env:
+  NAMESPACE: databaes-directus
+  APP_PORT: "30055"
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, "${{ inputs.env }}"]
+    env:
+      VAULT_ADDR:  ${{ secrets.VAULT_BOOTSTRAP_ADDR }}
+      VAULT_TOKEN: ${{ secrets.VAULT_BOOTSTRAP_ROOT_TOKEN }}
+      DEPLOY_ENV:  ${{ inputs.env }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Normalise Vault address
+        run: |
+          VA="${VAULT_ADDR%/}"
+          echo "VAULT_ADDR=$VA" >> $GITHUB_ENV
+
+      - name: Validate Vault token
+        run: |
+          S=$(curl -sf -o /dev/null -w "%{http_code}" \
+            -H "X-Vault-Token: $VAULT_TOKEN" \
+            "$VAULT_ADDR/v1/auth/token/lookup-self")
+          [ "$S" = "200" ] || { echo "Vault token invalid (HTTP $S)"; exit 1; }
+
+      - name: Resolve worker-node IP
+        id: resolve
+        run: |
+          if [ -n "${{ inputs.worker_node_ip }}" ]; then
+            WIP="${{ inputs.worker_node_ip }}"
+          else
+            WIP=$(curl -sf \
+              -H "X-Vault-Token: $VAULT_TOKEN" \
+              "$VAULT_ADDR/v1/secret/data/worker-node/$DEPLOY_ENV/active-slot" \
+              | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['data']['ip'])")
+          fi
+          case "$DEPLOY_ENV" in
+            prod) HOSTNAME="cms.databaes.net" ;;
+            dev)  HOSTNAME="cms-dev.databaes.net" ;;
+          esac
+          echo "WORKER_IP=$WIP"     >> $GITHUB_ENV
+          echo "HOSTNAME=$HOSTNAME" >> $GITHUB_ENV
+          echo "worker_ip=$WIP"     >> $GITHUB_OUTPUT
+          echo "hostname=$HOSTNAME" >> $GITHUB_OUTPUT
+
+      - name: Fetch SSH key
+        run: |
+          mkdir -p keys
+          curl -sf \
+            -H "X-Vault-Token: $VAULT_TOKEN" \
+            "$VAULT_ADDR/v1/secret/data/ssh_keys/worker_node_worker" \
+            | python3 -c "import json,sys; print(json.load(sys.stdin)['data']['data']['private_key'])" \
+            > keys/worker_ssh
+          chmod 600 keys/worker_ssh
+
+      - name: Seed Directus secrets in Vault (first-run only)
+        # Only writes secrets if the Vault path is empty — subsequent runs
+        # reuse what's already there so credentials stay stable across redeploys.
+        run: |
+          set -e
+          SEC_PATH="$VAULT_ADDR/v1/secret/data/databaes-directus/$DEPLOY_ENV/credentials"
+          EXISTING=$(curl -s -H "X-Vault-Token: $VAULT_TOKEN" "$SEC_PATH" | python3 -c "
+          import json,sys
+          try:
+              d=json.load(sys.stdin); print(d.get('data',{}).get('data',{}).get('db-pass',''))
+          except: print('')
+          ")
+          if [ -z "$EXISTING" ]; then
+            echo "Seeding fresh Directus secrets into Vault for $DEPLOY_ENV…"
+            DB_PASS=$(openssl rand -hex 24)
+            APP_KEY=$(openssl rand -hex 32)
+            APP_SECRET=$(openssl rand -hex 32)
+            ADMIN_PASS=$(openssl rand -hex 16)
+            BODY=$(python3 -c "import json; print(json.dumps({'data':{
+              'db-name':'directus','db-user':'directus','db-pass':'$DB_PASS',
+              'app-key':'$APP_KEY','app-secret':'$APP_SECRET',
+              'admin-email':'admin@databaes.net','admin-password':'$ADMIN_PASS'}}))")
+            curl -sf -H "X-Vault-Token: $VAULT_TOKEN" -X POST -d "$BODY" "$SEC_PATH" > /dev/null
+            echo "  Admin email:    admin@databaes.net"
+            echo "  Admin password: (stored in Vault at secret/databaes-directus/$DEPLOY_ENV/credentials)"
+          else
+            echo "Vault already has directus secrets for $DEPLOY_ENV; reusing."
+          fi
+
+      - name: Install kubectl + kustomize
+        run: |
+          if ! command -v kubectl &>/dev/null; then
+            curl -LO "https://dl.k8s.io/release/v1.32.0/bin/linux/amd64/kubectl"
+            install -m 0755 kubectl /usr/local/bin/kubectl && rm kubectl
+          fi
+          if ! command -v kustomize &>/dev/null; then
+            curl -L https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2Fv5.4.3/kustomize_v5.4.3_linux_amd64.tar.gz | tar xz
+            install -m 0755 kustomize /usr/local/bin/kustomize && rm kustomize
+          fi
+
+      - name: Setup kubectl
+        run: |
+          mkdir -p ~/.kube
+          ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+            "cat /etc/rancher/k3s/k3s.yaml" | sed "s/127.0.0.1/$WORKER_IP/g" > ~/.kube/config
+          chmod 600 ~/.kube/config
+
+      - name: Airgap pull Directus + Postgres images to worker
+        run: |
+          if ! command -v crane &>/dev/null; then
+            curl -sL https://github.com/google/go-containerregistry/releases/download/v0.19.1/go-containerregistry_Linux_x86_64.tar.gz | tar xz -C /tmp crane
+            install -m 0755 /tmp/crane /usr/local/bin/crane
+          fi
+          for IMG in directus/directus:11 postgres:16-alpine; do
+            NAME=$(echo "$IMG" | tr '/:' '--')
+            echo "Pulling $IMG → /tmp/$NAME.tar"
+            crane pull --format=tarball "$IMG" "/tmp/$NAME.tar"
+            scp -i keys/worker_ssh -o StrictHostKeyChecking=no "/tmp/$NAME.tar" root@$WORKER_IP:/tmp/
+            ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+              "k3s ctr images import /tmp/$NAME.tar && rm /tmp/$NAME.tar"
+            rm "/tmp/$NAME.tar"
+          done
+
+      - name: Write secret manifest from Vault values
+        run: |
+          SEC_PATH="$VAULT_ADDR/v1/secret/data/databaes-directus/$DEPLOY_ENV/credentials"
+          VALS=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$SEC_PATH")
+          mkdir -p directus/manifests/overlays/$DEPLOY_ENV
+          pip install pyyaml --quiet
+          NAMESPACE="$NAMESPACE" DEPLOY_ENV="$DEPLOY_ENV" VALS="$VALS" python3 - <<'PY'
+          import json, os, base64, yaml
+          vals = json.loads(os.environ['VALS'])['data']['data']
+          out = {
+            'apiVersion':'v1','kind':'Secret','type':'Opaque',
+            'metadata':{'name':'directus-secrets','namespace':os.environ['NAMESPACE']},
+            'data':{k: base64.b64encode(v.encode()).decode() for k,v in vals.items()},
+          }
+          dest = f"directus/manifests/overlays/{os.environ['DEPLOY_ENV']}/secret.generated.yaml"
+          with open(dest, 'w') as f:
+            yaml.safe_dump(out, f)
+          print(f"Wrote {len(vals)} keys to {dest}")
+          PY
+
+      - name: Apply manifests
+        run: |
+          # Override the overlay kustomization to pull the live Secret instead of
+          # the PLACEHOLDER secretGenerator. Rather than edit the file, apply the
+          # base + the live secret separately.
+          kubectl apply -k directus/manifests/base
+          # Apply the real Secret from Vault (overwrites the placeholder from
+          # secretGenerator if one was applied by the base).
+          kubectl -n $NAMESPACE apply -f directus/manifests/overlays/$DEPLOY_ENV/secret.generated.yaml
+          # Bounce deployments so they pick up the secret if it just changed.
+          kubectl -n $NAMESPACE rollout restart deployment/postgres deployment/directus || true
+
+      - name: Wait for rollout
+        run: |
+          kubectl -n $NAMESPACE rollout status deployment/postgres --timeout=120s
+          kubectl -n $NAMESPACE rollout status deployment/directus --timeout=240s
+          echo "=== pods ==="
+          kubectl -n $NAMESPACE get pods -o wide
+
+      - name: Open NodePort in worker firewall
+        run: |
+          ssh -i keys/worker_ssh -o StrictHostKeyChecking=no root@$WORKER_IP \
+            "if command -v ufw >/dev/null 2>&1 && ufw status 2>/dev/null | grep -q 'Status: active'; then
+               ufw allow $APP_PORT/tcp && echo 'UFW opened'
+             fi
+             iptables -C INPUT -p tcp --dport $APP_PORT -j ACCEPT 2>/dev/null || \
+               ( iptables -I INPUT -p tcp --dport $APP_PORT -j ACCEPT && echo 'iptables opened' )"
+
+      - name: Cleanup
+        if: always()
+        run: rm -rf keys ~/.kube/config directus/manifests/overlays/*/secret.generated.yaml
+
+  register-dns:
+    needs: [deploy]
+    runs-on: ubuntu-latest
+    env:
+      ENV:       ${{ inputs.env }}
+      WORKER_IP: ${{ needs.deploy.outputs.worker_ip }}
+      HOSTNAME:  ${{ needs.deploy.outputs.hostname }}
+      APP_PORT:  "30055"
+    steps:
+      - name: Checkout traefik-gitops
+        uses: actions/checkout@v4
+        with:
+          repository: TomasBFerreira/traefik-gitops
+          token: ${{ secrets.GH_PAT }}
+          path: traefik-gitops
+
+      - name: Upsert Traefik route
+        run: |
+          pip install pyyaml --quiet
+          python3 - <<'EOF'
+          import yaml, os
+          path = "traefik-gitops/config/dynamic/services.yml"
+          with open(path) as f: cfg = yaml.safe_load(f) or {}
+          host    = os.environ["HOSTNAME"]
+          env     = os.environ["ENV"]
+          backend = f"http://{os.environ['WORKER_IP']}:{os.environ['APP_PORT']}"
+          router  = f"directus-{env}-router"
+          svc     = f"directus-{env}-service"
+          cfg.setdefault("http", {}).setdefault("routers", {})[router] = {
+            "rule": f"Host(`{host}`)",
+            "service": svc,
+            "entryPoints": ["web", "websecure"],
+            "middlewares": ["https-scheme"],
+            "tls": {"certResolver": "letsencrypt"},
+          }
+          cfg["http"].setdefault("services", {})[svc] = {
+            "loadBalancer": {"servers": [{"url": backend}]}
+          }
+          with open(path, "w") as f:
+            yaml.dump(cfg, f, default_flow_style=False, allow_unicode=True)
+          print(f"Upserted {host} → {backend}")
+          EOF
+
+      - name: Push route update
+        working-directory: traefik-gitops
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add config/dynamic/services.yml
+          if git diff --staged --quiet; then
+            echo "No route changes to push"
+          else
+            git commit -m "chore: upsert directus-$ENV route ($HOSTNAME → http://$WORKER_IP:$APP_PORT)"
+            git push
+          fi
+
+      - name: Trigger Cloudflare DNS backfill
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          gh workflow run backfill-dns.yml --repo TomasBFerreira/traefik-gitops

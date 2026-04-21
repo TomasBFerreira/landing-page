@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: directus
+  namespace: databaes-directus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: directus
+  template:
+    metadata:
+      labels:
+        app: directus
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+        - name: directus
+          image: directus/directus:11
+          ports:
+            - containerPort: 8055
+          env:
+            - name: KEY
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: app-key
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: app-secret
+            - name: ADMIN_EMAIL
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: admin-email
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: admin-password
+            - name: DB_CLIENT
+              value: pg
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: db-name
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: db-user
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: db-pass
+            - name: PUBLIC_URL
+              value: https://cms.databaes.net
+            # CORS so the databaes.net landing page can read collections at
+            # runtime without a proxy. Writes require an auth'd session so this
+            # is read-only safe.
+            - name: CORS_ENABLED
+              value: "true"
+            - name: CORS_ORIGIN
+              value: https://databaes.net,https://www.databaes.net,https://databaes-landing-page.databaes.net,https://databaes-landing-page-dev.databaes.net
+            - name: CORS_METHODS
+              value: GET,OPTIONS
+            - name: CORS_CREDENTIALS
+              value: "false"
+            - name: STORAGE_LOCATIONS
+              value: local
+            - name: STORAGE_LOCAL_DRIVER
+              value: local
+            - name: STORAGE_LOCAL_ROOT
+              value: /directus/uploads
+          volumeMounts:
+            - name: uploads
+              mountPath: /directus/uploads
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /server/health
+              port: 8055
+            initialDelaySeconds: 20
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /server/health
+              port: 8055
+            initialDelaySeconds: 60
+            periodSeconds: 30
+      volumes:
+        - name: uploads
+          persistentVolumeClaim:
+            claimName: directus-uploads-pvc
