@@ -55,7 +55,7 @@ export class AdminComponent implements OnInit {
       purpose: 'Edit landing-page copy — hero, about, showcase. Admin login in Vault at secret/databaes-directus/prod/credentials.' },
     { glyph: '☰', name: 'Ops Portal',        url: 'https://ops.databaes.net/',
       purpose: 'CMDB, incidents, changes, deployments, infrastructure actions. Auth via Authentik.' },
-    { glyph: '▤', name: 'Wiki.js',           url: 'https://wiki.databaes.net/',
+    { glyph: '▤', name: 'Wiki.js',           url: 'https://wikijs.databaes.net/',
       purpose: 'Long-form docs, runbooks, per-service architecture pages. Auth via Authentik.' },
     { glyph: '◷', name: 'Grafana',           url: 'https://grafana.databaes.net/',
       purpose: 'Dashboards, alerts, logs. SLO views + AI-pipeline health.' },
