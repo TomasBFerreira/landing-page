@@ -1,14 +1,14 @@
 import { ServiceDef } from './models/service.model';
 
 /**
- * IP convention:
- *   192.168.50.x    →  Proxmox management LAN (hypervisors + unmigrated services)
- *   192.168.10.x    →  VLAN 10 · production services (betsy)
- *   192.168.20.x    →  VLAN 20 · dev services (benedict)
+ * Prod-only tiles. Every URL is a public *.databaes.net FQDN behind the
+ * Cloudflare tunnel and is probed by otel-monitoring's blackbox job, so
+ * `probe_success` drives the status chip. Dev/QA services intentionally
+ * aren't listed — they're Tailscale-only and not landing-page surfaces.
  */
 export const SERVICES: ServiceDef[] = [
 
-  // ── Infrastructure (prod only — public FQDNs behind CF tunnel) ──────────────
+  // ── Infrastructure ──────────────────────────────────────────────────────────
   {
     id: 'vault-prod',
     name: 'Vault',
@@ -30,160 +30,66 @@ export const SERVICES: ServiceDef[] = [
   {
     id: 'rancher',
     name: 'Rancher',
-    description: 'Kubernetes cluster management for k3s worker nodes',
+    description: 'Kubernetes cluster management for the k3s worker node',
     env: 'infra',
     url: 'https://rancher.databaes.net',
     icon: '☸',
     tags: ['k8s', 'k3s'],
   },
-
-  // ── Production (192.168.50.1xx) ──────────────────────────────────────────────
   {
-    id: 'plex',
-    name: 'Plex',
-    description: 'Media server — movies, TV & music streaming (192.168.50.111:32400)',
-    env: 'prod',
-    url: 'https://plex.databaes.net',
-    icon: '▶',
-    tags: ['streaming', '1xx'],
-  },
-  {
-    id: 'overseerr',
-    name: 'Overseerr',
-    description: 'Media request & discovery platform (192.168.50.111:5055)',
-    env: 'prod',
-    url: 'https://overseerr.databaes.net',
-    icon: '🎬',
-    tags: ['requests', '1xx'],
-  },
-  {
-    id: 'nextcloud',
-    name: 'Nextcloud',
-    description: 'Self-hosted file storage & collaboration (192.168.50.105)',
-    env: 'prod',
-    url: 'https://cloud.databaes.net',
-    icon: '☁',
-    tags: ['storage', 'files', '1xx'],
-  },
-  {
-    id: 'qbittorrent',
-    name: 'qBittorrent',
-    description: 'Torrent download client with web UI (192.168.10.65:8080)',
-    env: 'prod',
-    url: 'https://torrent.databaes.net',
-    icon: '⬇',
-    tags: ['download', '1xx'],
+    id: 'grafana',
+    name: 'Grafana',
+    description: 'Metrics, logs and dashboards — observability stack',
+    env: 'infra',
+    url: 'https://grafana.databaes.net',
+    icon: '◷',
+    tags: ['observability'],
   },
 
-  // ── QA / Test (test workloads on 192.168.50.111) ─────────────────────────────
+  // ── Applications ────────────────────────────────────────────────────────────
   {
-    id: 'jellyfin-test',
-    name: 'Jellyfin',
-    description: 'Open-source media server — test instance (192.168.50.111:8096)',
-    env: 'qa',
-    url: 'https://jellyfintest.databaes.net',
-    icon: '🎵',
-    tags: ['streaming', 'test'],
-  },
-  {
-    id: 'sonarr-qa',
-    name: 'Sonarr',
-    description: 'TV series manager — QA instance (192.168.50.111:8989)',
-    env: 'qa',
-    url: 'https://sonarrtest.databaes.net',
-    icon: '📺',
-    tags: ['tv', 'test'],
-  },
-  {
-    id: 'radarr-qa',
-    name: 'Radarr',
-    description: 'Movie collection manager — QA instance (192.168.50.111:7878)',
-    env: 'qa',
-    url: 'https://radarrtest.databaes.net',
-    icon: '🎞',
-    tags: ['movies', 'test'],
-  },
-  {
-    id: 'prowlarr-qa',
-    name: 'Prowlarr',
-    description: 'Indexer manager — QA instance (192.168.50.111:9696)',
-    env: 'qa',
-    url: 'https://prowlarrtest.databaes.net',
-    icon: '🔍',
-    tags: ['indexer', 'test'],
-  },
-  {
-    id: 'overseerr-qa',
-    name: 'Overseerr',
-    description: 'Media requests — QA instance (192.168.50.111:5055)',
-    env: 'qa',
-    url: 'https://overseerrtest.databaes.net',
-    icon: '🎬',
-    tags: ['requests', 'test'],
-  },
-  {
-    id: 'jackett-qa',
-    name: 'Jackett',
-    description: 'Torrent proxy & indexer — QA instance (192.168.50.111:9117)',
-    env: 'qa',
-    url: 'https://jacketttest.databaes.net',
-    icon: '🔗',
-    tags: ['indexer', 'test'],
-  },
-  {
-    id: 'stremio-qa',
-    name: 'Stremio',
-    description: 'Streaming aggregator — QA instance (192.168.50.111:11470)',
-    env: 'qa',
-    url: 'https://stremiotest.databaes.net',
-    icon: '📡',
-    tags: ['streaming', 'test'],
-  },
-
-  // ── Dev (192.168.50.2xx mgmt · k3s dev worker VLAN 20 → 192.168.20.11) ───────
-  {
-    id: 'sonarr-dev',
-    name: 'Sonarr',
-    description: 'TV series manager — dev instance on k3s (192.168.20.11:8989)',
-    env: 'dev',
-    url: 'https://sonarr-dev.databaes.net',
-    icon: '📺',
-    tags: ['tv', '2xx'],
-  },
-  {
-    id: 'radarr-dev',
-    name: 'Radarr',
-    description: 'Movie collection manager — dev instance on k3s (192.168.20.11:7878)',
-    env: 'dev',
-    url: 'https://radarr-dev.databaes.net',
-    icon: '🎞',
-    tags: ['movies', '2xx'],
-  },
-  {
-    id: 'prowlarr-dev',
-    name: 'Prowlarr',
-    description: 'Indexer manager — dev instance on k3s (192.168.20.11:9696)',
-    env: 'dev',
-    url: 'https://prowlarr-dev.databaes.net',
-    icon: '🔍',
-    tags: ['indexer', '2xx'],
-  },
-  {
-    id: 'overseerr-dev',
-    name: 'Overseerr',
-    description: 'Media requests — dev instance on k3s (192.168.20.11:5055)',
-    env: 'dev',
-    url: 'https://overseerr-dev.databaes.net',
-    icon: '🎬',
-    tags: ['requests', '2xx'],
+    id: 'ops-portal',
+    name: 'Ops Portal',
+    description: 'CMDB, incidents, changes, deployments, infrastructure actions',
+    env: 'prod',
+    url: 'https://ops.databaes.net',
+    icon: '☰',
+    tags: ['cmdb', 'ops'],
   },
   {
     id: 'wikijs',
     name: 'Wiki.js',
-    description: 'Internal knowledge base & documentation (192.168.20.11:3000)',
-    env: 'dev',
-    url: 'https://wikijs-dev.databaes.net',
+    description: 'Internal knowledge base — runbooks, architecture, docs',
+    env: 'prod',
+    url: 'https://wikijs.databaes.net',
     icon: '📖',
-    tags: ['docs', '2xx'],
+    tags: ['docs'],
+  },
+  {
+    id: 'directus-cms',
+    name: 'Directus CMS',
+    description: 'Headless CMS backing the landing-page copy (hero, about, showcase)',
+    env: 'prod',
+    url: 'https://cms.databaes.net',
+    icon: '✎',
+    tags: ['cms', 'content'],
+  },
+  {
+    id: 'nextcloud',
+    name: 'Nextcloud',
+    description: 'Self-hosted file storage & collaboration',
+    env: 'prod',
+    url: 'https://cloud.databaes.net',
+    icon: '☁',
+    tags: ['storage', 'files'],
+  },
+  {
+    id: 'qbittorrent',
+    name: 'qBittorrent',
+    description: 'Torrent download client with web UI',
+    env: 'prod',
+    url: 'https://torrent.databaes.net',
+    icon: '⬇',
+    tags: ['download'],
   },
 ];

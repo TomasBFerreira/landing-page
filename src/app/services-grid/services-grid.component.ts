@@ -20,10 +20,8 @@ interface EnvGroup {
 })
 export class ServicesGridComponent {
   readonly groups: EnvGroup[] = [
-    { env: 'infra', label: 'Infrastructure',  sublabel: 'Shared platform services',          ipHint: '1xx · 2xx' },
-    { env: 'prod',  label: 'Production',      sublabel: 'Live services — 192.168.50.1xx',    ipHint: '1xx'       },
-    { env: 'qa',    label: 'QA / Test',        sublabel: 'Test workloads — 192.168.50.1xx',   ipHint: '1xx ports' },
-    { env: 'dev',   label: 'Dev',             sublabel: 'k3s dev worker — 192.168.50.2xx',   ipHint: '2xx'       },
+    { env: 'infra', label: 'Infrastructure', sublabel: 'Shared platform services', ipHint: '' },
+    { env: 'prod',  label: 'Applications',   sublabel: 'User-facing prod services', ipHint: '' },
   ];
 
   constructor(private health: HealthCheckService) {}
