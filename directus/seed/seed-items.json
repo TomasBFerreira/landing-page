@@ -1,0 +1,52 @@
+{
+  "_comment": "LP-F4 Phase 2 — initial content seed. Matches what's currently hard-coded in home/about/showcase Angular components. Re-running the seeder is idempotent: it only creates a row if the collection is empty.",
+
+  "hero_content": {
+    "eyebrow":       "// homelab · proxmox · k3s · vault · authentik",
+    "title_prefix":  "data",
+    "title_accent":  "baes",
+    "title_suffix":  ".net",
+    "subline":       "A self-hosted homelab running on bare-metal Proxmox — Kubernetes workloads on k3s, secrets in Vault, SSO via Authentik, a GitOps deploy pipeline, and a small AI integration in the incident path. Everything below is live.",
+    "badges":        [{"label": "Proxmox VE"}, {"label": "k3s"}, {"label": "Rancher"}, {"label": "Vault HA"}, {"label": "Authentik SSO"}, {"label": "Traefik"}, {"label": "Cloudflare"}],
+    "cta_label":     "how it's integrated →",
+    "cta_route":     "/showcase"
+  },
+
+  "about_intro": {
+    "title":          "databaes.net",
+    "lede_primary":   "A personal homelab run by [Tomas Ferreira](https://github.com/TomasBFerreira). Bare-metal Proxmox underneath; a small k3s cluster on top for workloads; Authentik for identity, Vault for secrets, Traefik + Cloudflare for ingress (prod) and Tailscale for lower envs. Every deploy goes through GitHub Actions + blue/green worker slots.",
+    "lede_secondary": "This page is deliberately short. The [showcase](/showcase) has the AI-integration write-up; the wiki (behind SSO) has everything else — per-service architecture, runbooks, diagrams."
+  },
+
+  "about_projects": [
+    { "sort": 1, "name": "Ops Portal",                     "summary": "Eight Go microservices (cmdb, audit, deployments, domain, identity, incidents, infrastructure, shell) behind an Angular admin UI. The control plane for the rest of the homelab." },
+    { "sort": 2, "name": "Tomaj Flix (streambox)",         "summary": "Self-hosted streaming platform. Go backend scans a media library, pulls TMDB metadata, downloads subtitles on demand. SvelteKit frontend plays in the browser." },
+    { "sort": 3, "name": "Wiki.js",                        "summary": "Operations wiki mirroring repo-side infra docs, runbooks, and per-service pages. Deployed across dev, QA, and prod clusters." },
+    { "sort": 4, "name": "Media stack",                    "summary": "Sonarr, Radarr, Prowlarr, and Seerr working together to request, find, and land media. Feeds straight into the Tomaj Flix library." },
+    { "sort": 5, "name": "Nextcloud",                      "summary": "Self-hosted file sync + CalDAV/CardDAV. Replaces the Dropbox / Google Drive slot in the stack." },
+    { "sort": 6, "name": "Observability (otel-monitoring)","summary": "Prometheus, Loki, Tempo, and Grafana on a central monitoring host. Every service emits OTel signals to the same place." }
+  ],
+
+  "showcase_integration_points": [
+    { "sort": 1, "kind": "host",  "heading": "Where it runs",  "body": "A single Go service (ops-portal-incidents) calls the Claude API. No standing agent, no background loops — the model is invoked synchronously when an incident opens and again after a remediation attempt." },
+    { "sort": 2, "kind": "read",  "heading": "What it reads",  "body": "The opened incident record, the affected CI's recent logs from Loki, the last few Prometheus samples for the violated SLO, and any prior incidents on the same CI. Context window budget is capped; older trails get summarised, not dropped." },
+    { "sort": 3, "kind": "write", "heading": "What it writes", "body": "A diagnosis comment on the incident, a proposed remediation payload, and — if the payload passes the gate — a change record in the CMDB that the infrastructure service then executes. Every field is audited." }
+  ],
+
+  "showcase_steps": [
+    { "sort": 1, "step_id": "signal",    "label": "Signal",          "detail": "Health check, log pattern, or user report arrives on the NATS bus. No AI involvement yet." },
+    { "sort": 2, "step_id": "incident",  "label": "Incident opened", "detail": "Third consecutive failure trips the threshold. A record lands in the CMDB — this is what the model will see." },
+    { "sort": 3, "step_id": "triage",    "label": "AI triage",       "detail": "Claude is handed the incident + recent logs + SLO context and returns a fault-class guess. Low-confidence returns flow straight to a human, not to step 4." },
+    { "sort": 4, "step_id": "diagnosis", "label": "Diagnosis",       "detail": "Proposed root cause + the specific remediation payload (Ansible play or k8s patch). Written to the incident before any execution is considered." },
+    { "sort": 5, "step_id": "gate",      "label": "Human gate",      "detail": "Anything destructive, prod-scoped, or novel pauses here. Routine, narrow, well-known faults pass through automatically.", "gate": "human" },
+    { "sort": 6, "step_id": "execute",   "label": "Execute",         "detail": "Remediation fires via the infrastructure service. The exact command is captured in the audit trail — not the AI's description of it, the actual payload.", "gate": "auto" },
+    { "sort": 7, "step_id": "verify",    "label": "Verify + close",  "detail": "Post-remediation measurement re-checks the SLO. If it recovered, the incident closes. If not, the loop opens a fresh incident rather than re-prompting." }
+  ],
+
+  "showcase_choices": [
+    { "sort": 1, "icon": "🎯", "heading": "SLO-anchored",          "body": "The model doesn't decide whether a remediation worked. The SLO does. This keeps the conversation grounded in signals the rest of the stack also believes in." },
+    { "sort": 2, "icon": "🪟", "heading": "Glass-box",             "body": "Prompt, response, proposed payload, actual payload, and outcome are all in the audit trail. Replay is how we debug the model, not tracing frameworks wrapped around the SDK." },
+    { "sort": 3, "icon": "🧍", "heading": "Narrow auto-execute",   "body": "Auto-execute is scoped to a short allow-list of class-1 fault patterns (stuck deployments, leaked PIDs, orphan PVCs). Everything else pauses for approval by default." },
+    { "sort": 4, "icon": "🔬", "heading": "Benchmarked, not trusted","body": "The Gremlin control room replays known-answer scenarios on every deploy. Quality regressions get caught on the bench, before a real incident meets a worse model." }
+  ]
+}

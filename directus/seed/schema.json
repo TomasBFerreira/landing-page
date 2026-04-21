@@ -1,0 +1,109 @@
+{
+  "_comment": "LP-F4 Phase 2 — Directus collection schema for the landing-page content surfaces. Applied by seed.sh once per env. See README.md in this folder for the full flow. Collections are intentionally flat — the landing-page is a single-author surface, not a blog.",
+  "collections": [
+    {
+      "collection": "hero_content",
+      "meta": {
+        "singleton": true,
+        "icon": "title",
+        "note": "Home-page hero (eyebrow line, title accent, subline, tech badges, CTA link)."
+      },
+      "schema": { "name": "hero_content" },
+      "fields": [
+        { "field": "id",            "type": "integer",  "schema": { "is_primary_key": true, "has_auto_increment": true }, "meta": { "hidden": true, "readonly": true, "interface": "input" } },
+        { "field": "eyebrow",       "type": "string",   "meta": { "interface": "input",  "width": "full", "note": "Small orange line above the title (e.g. '// homelab · proxmox · k3s · vault · authentik')." } },
+        { "field": "title_prefix",  "type": "string",   "meta": { "interface": "input",  "width": "half", "note": "Plain part before the accent (e.g. 'data')." } },
+        { "field": "title_accent",  "type": "string",   "meta": { "interface": "input",  "width": "half", "note": "Orange part (e.g. 'baes')." } },
+        { "field": "title_suffix",  "type": "string",   "meta": { "interface": "input",  "width": "half", "note": "Dim part after the accent (e.g. '.net')." } },
+        { "field": "subline",       "type": "text",     "meta": { "interface": "input-multiline", "width": "full", "note": "Paragraph under the title." } },
+        { "field": "badges",        "type": "json",     "meta": { "interface": "list",   "width": "full", "note": "Array of short tech-stack strings rendered as chips.", "options": { "template": "{{ label }}", "fields": [ { "field": "label", "type": "string", "meta": { "interface": "input" } } ] } } },
+        { "field": "cta_label",     "type": "string",   "meta": { "interface": "input",  "width": "half", "note": "Text of the subtle CTA link under the badges (e.g. 'how it's integrated →')." } },
+        { "field": "cta_route",     "type": "string",   "meta": { "interface": "input",  "width": "half", "note": "Internal route (e.g. '/showcase')." } }
+      ]
+    },
+
+    {
+      "collection": "about_intro",
+      "meta": {
+        "singleton": true,
+        "icon": "info",
+        "note": "About-page lede + github link."
+      },
+      "schema": { "name": "about_intro" },
+      "fields": [
+        { "field": "id",             "type": "integer", "schema": { "is_primary_key": true, "has_auto_increment": true }, "meta": { "hidden": true } },
+        { "field": "title",          "type": "string",  "meta": { "interface": "input",           "note": "Large heading at the top of /about." } },
+        { "field": "lede_primary",   "type": "text",    "meta": { "interface": "input-multiline", "note": "First paragraph. Inline-link to GitHub is okay via markdown." } },
+        { "field": "lede_secondary", "type": "text",    "meta": { "interface": "input-multiline", "note": "Short grey follow-up paragraph pointing at /showcase + wiki." } }
+      ]
+    },
+
+    {
+      "collection": "about_projects",
+      "meta": {
+        "icon": "inventory_2",
+        "sort_field": "sort",
+        "note": "'What runs here' cards on /about. Ordered by sort."
+      },
+      "schema": { "name": "about_projects" },
+      "fields": [
+        { "field": "id",      "type": "integer", "schema": { "is_primary_key": true, "has_auto_increment": true }, "meta": { "hidden": true } },
+        { "field": "sort",    "type": "integer", "meta": { "interface": "input",           "hidden": false } },
+        { "field": "name",    "type": "string",  "meta": { "interface": "input",           "required": true } },
+        { "field": "summary", "type": "text",    "meta": { "interface": "input-multiline", "required": true } }
+      ]
+    },
+
+    {
+      "collection": "showcase_integration_points",
+      "meta": {
+        "icon": "compare_arrows",
+        "sort_field": "sort",
+        "note": "Host / Read / Write cards at the top of /showcase."
+      },
+      "schema": { "name": "showcase_integration_points" },
+      "fields": [
+        { "field": "id",      "type": "integer", "schema": { "is_primary_key": true, "has_auto_increment": true }, "meta": { "hidden": true } },
+        { "field": "sort",    "type": "integer", "meta": { "interface": "input" } },
+        { "field": "kind",    "type": "string",  "meta": { "interface": "select-dropdown", "required": true, "options": { "choices": [ { "text": "host",  "value": "host"  }, { "text": "read",  "value": "read"  }, { "text": "write", "value": "write" } ] } } },
+        { "field": "heading", "type": "string",  "meta": { "interface": "input",           "required": true } },
+        { "field": "body",    "type": "text",    "meta": { "interface": "input-multiline", "required": true } }
+      ]
+    },
+
+    {
+      "collection": "showcase_steps",
+      "meta": {
+        "icon": "route",
+        "sort_field": "sort",
+        "note": "The seven numbered steps in /showcase's pipeline flow."
+      },
+      "schema": { "name": "showcase_steps" },
+      "fields": [
+        { "field": "id",      "type": "integer", "schema": { "is_primary_key": true, "has_auto_increment": true }, "meta": { "hidden": true } },
+        { "field": "sort",    "type": "integer", "meta": { "interface": "input" } },
+        { "field": "step_id", "type": "string",  "meta": { "interface": "input",           "required": true, "note": "Machine-friendly id (signal, incident, triage, diagnosis, gate, execute, verify)." } },
+        { "field": "label",   "type": "string",  "meta": { "interface": "input",           "required": true } },
+        { "field": "detail",  "type": "text",    "meta": { "interface": "input-multiline", "required": true } },
+        { "field": "gate",    "type": "string",  "meta": { "interface": "select-dropdown", "options": { "choices": [ { "text": "none (default)", "value": "" }, { "text": "human gate",     "value": "human" }, { "text": "automated",      "value": "auto"  } ] } } }
+      ]
+    },
+
+    {
+      "collection": "showcase_choices",
+      "meta": {
+        "icon": "tune",
+        "sort_field": "sort",
+        "note": "Design-decisions grid at the bottom of /showcase."
+      },
+      "schema": { "name": "showcase_choices" },
+      "fields": [
+        { "field": "id",      "type": "integer", "schema": { "is_primary_key": true, "has_auto_increment": true }, "meta": { "hidden": true } },
+        { "field": "sort",    "type": "integer", "meta": { "interface": "input" } },
+        { "field": "icon",    "type": "string",  "meta": { "interface": "input", "note": "Single emoji or glyph." } },
+        { "field": "heading", "type": "string",  "meta": { "interface": "input",           "required": true } },
+        { "field": "body",    "type": "text",    "meta": { "interface": "input-multiline", "required": true } }
+      ]
+    }
+  ]
+}
