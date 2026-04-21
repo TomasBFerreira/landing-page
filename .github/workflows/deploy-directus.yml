@@ -34,6 +34,12 @@ jobs:
       VAULT_ADDR:  ${{ secrets.VAULT_BOOTSTRAP_ADDR }}
       VAULT_TOKEN: ${{ secrets.VAULT_BOOTSTRAP_ROOT_TOKEN }}
       DEPLOY_ENV:  ${{ inputs.env }}
+    outputs:
+      # These feed register-dns. Without them that job gets empty strings
+      # and writes Host(``) / http://:30055 into services.yml (what the
+      # first deploy actually did — see landing-page#20 fix-up).
+      worker_ip: ${{ steps.resolve.outputs.worker_ip }}
+      hostname:  ${{ steps.resolve.outputs.hostname }}
     steps:
       - uses: actions/checkout@v4
 
@@ -263,9 +269,15 @@ jobs:
             git push
           fi
 
-      - name: Trigger Cloudflare DNS backfill
+      - name: Trigger Cloudflare DNS backfill + Traefik prod deploy
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           gh workflow run backfill-dns.yml --repo TomasBFerreira/traefik-gitops
+          # The push-triggered traefik-gitops deploy only goes to dev; prod
+          # needs a dispatch with deploy_prod=true so network-vm-blue/green
+          # actually receives the new directus route.
+          if [ "$ENV" = "prod" ]; then
+            gh workflow run deploy.yml --repo TomasBFerreira/traefik-gitops --field deploy_prod=true
+          fi
