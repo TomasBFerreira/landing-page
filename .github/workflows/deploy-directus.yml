@@ -152,13 +152,41 @@ jobs:
         run: |
           SEC_PATH="$VAULT_ADDR/v1/secret/data/databaes-directus/$DEPLOY_ENV/credentials"
           VALS=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$SEC_PATH")
+
+          # LP-F10: Authentik OIDC creds. Provisioned by infra-platform's
+          # sso_setup.yml and written to secret/authentik/<env>/directus-oidc
+          # in the bootstrap vault. If the path is missing (sso pipeline
+          # hasn't run yet for this env) we skip the oidc-* keys so the
+          # pod falls back to admin-email/password auth only.
+          OIDC_PATH="$VAULT_ADDR/v1/secret/data/authentik/$DEPLOY_ENV/directus-oidc"
+          OIDC=$(curl -sf -H "X-Vault-Token: $VAULT_TOKEN" "$OIDC_PATH" || echo '')
+
           mkdir -p directus/manifests/overlays/$DEPLOY_ENV
           # Emit the Secret YAML with stdlib only — the self-hosted runner is
           # on Debian bookworm+ where pip install refuses system-wide writes
           # (PEP 668). Secret shape is flat; hand-emitting YAML is safe.
-          NAMESPACE="$NAMESPACE" DEPLOY_ENV="$DEPLOY_ENV" VALS="$VALS" python3 - <<'PY'
+          NAMESPACE="$NAMESPACE" DEPLOY_ENV="$DEPLOY_ENV" VALS="$VALS" OIDC="$OIDC" python3 - <<'PY'
           import json, os, base64
           vals = json.loads(os.environ['VALS'])['data']['data']
+          oidc_raw = os.environ.get('OIDC', '').strip()
+          if oidc_raw:
+              try:
+                  oidc = json.loads(oidc_raw)['data']['data']
+                  vals['oidc-client-id']     = oidc['client_id']
+                  vals['oidc-client-secret'] = oidc['client_secret']
+                  vals['oidc-discovery-url'] = oidc['discovery_url']
+                  print(f"Merged OIDC creds for Directus SSO (LP-F10)")
+              except (KeyError, json.JSONDecodeError) as e:
+                  print(f"WARN: OIDC payload malformed ({e}); skipping oidc-* keys.")
+          else:
+              # Don't silently break the manifest — if AUTH_OIDC_* env is set
+              # on the Deployment but these keys aren't in the Secret, the
+              # pod will CrashLoopBackOff. Emit empty strings so Directus
+              # boots and logs a warning instead.
+              vals['oidc-client-id']     = ''
+              vals['oidc-client-secret'] = ''
+              vals['oidc-discovery-url'] = ''
+              print("WARN: no Authentik OIDC creds in Vault yet — Directus will boot with empty OIDC (SSO button won't work until sso pipeline runs).")
           dest = f"directus/manifests/overlays/{os.environ['DEPLOY_ENV']}/secret.generated.yaml"
           lines = [
             "apiVersion: v1",

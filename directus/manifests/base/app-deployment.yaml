@@ -80,6 +80,41 @@ spec:
               value: local
             - name: STORAGE_LOCAL_ROOT
               value: /directus/uploads
+            # LP-F10: Authentik OIDC — single sign-on for the Directus admin
+            # UI. Provider + client credentials are provisioned in
+            # infra-platform's sso_setup.yml; this pod reads them from the
+            # `directus-secrets` k8s Secret (seeded by deploy-directus.yml
+            # from Vault `secret/authentik/<env>/directus-oidc`).
+            # Users still see the local admin login as a fallback.
+            - name: AUTH_PROVIDERS
+              value: oidc
+            - name: AUTH_OIDC_DRIVER
+              value: openid
+            - name: AUTH_OIDC_LABEL
+              value: Sign in with Authentik
+            - name: AUTH_OIDC_ICON
+              value: lock
+            - name: AUTH_OIDC_ISSUER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: oidc-discovery-url
+            - name: AUTH_OIDC_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: oidc-client-id
+            - name: AUTH_OIDC_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: directus-secrets
+                  key: oidc-client-secret
+            - name: AUTH_OIDC_IDENTIFIER_KEY
+              value: email
+            - name: AUTH_OIDC_EMAIL_KEY
+              value: email
+            - name: AUTH_OIDC_ALLOW_PUBLIC_REGISTRATION
+              value: "false"
           volumeMounts:
             - name: uploads
               mountPath: /directus/uploads
