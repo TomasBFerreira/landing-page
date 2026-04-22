@@ -45,6 +45,15 @@ export const SERVICES: ServiceDef[] = [
     icon: '◷',
     tags: ['observability'],
   },
+  {
+    id: 'traefik',
+    name: 'Traefik',
+    description: 'Edge proxy + Authentik-gated dashboard on the network VM',
+    env: 'infra',
+    url: 'https://traefik.databaes.net',
+    icon: '⇆',
+    tags: ['edge', 'proxy'],
+  },
 
   // ── Applications ────────────────────────────────────────────────────────────
   {
