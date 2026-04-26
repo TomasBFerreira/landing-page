@@ -7,7 +7,7 @@ on:
     inputs:
       env:
         type: choice
-        options: [dev, prod]
+        options: [dev, qa, prod]
         default: dev
       worker_node_ip:
         required: false
@@ -320,17 +320,30 @@ jobs:
 
       - name: Compute hostname
         run: |
-          # prod: databaes.net (root domain), dev: dev.databaes.net
-          # Service names are env-scoped so dev and prod never share a backend entry
-          if [ "$ENV" = "prod" ]; then
-            echo "HOSTNAME=databaes.net"                         >> $GITHUB_ENV
-            echo "ROUTER_NAME=databaes-landing-page-router"     >> $GITHUB_ENV
-            echo "SVC_NAME=databaes-landing-page-service"       >> $GITHUB_ENV
-          else
-            echo "HOSTNAME=dev.databaes.net"                    >> $GITHUB_ENV
-            echo "ROUTER_NAME=dev-router"                       >> $GITHUB_ENV
-            echo "SVC_NAME=databaes-landing-page-dev-service"   >> $GITHUB_ENV
-          fi
+          # prod: databaes.net (root domain), dev: dev.databaes.net,
+          # qa:   qa.databaes.net (Tailscale-only — AdGuard rewrites the name
+          # on the QA network-vm; no public Cloudflare CNAME).
+          # Service names are env-scoped so envs never share a backend entry.
+          case "$ENV" in
+            prod)
+              echo "HOSTNAME=databaes.net"                       >> $GITHUB_ENV
+              echo "ROUTER_NAME=databaes-landing-page-router"   >> $GITHUB_ENV
+              echo "SVC_NAME=databaes-landing-page-service"     >> $GITHUB_ENV
+              ;;
+            qa)
+              # Tailscale-only — needs a `*-qa.` hostname so traefik-gitops'
+              # sync-dns skips creating a public Cloudflare CNAME (which would
+              # otherwise point at the prod tunnel and 404).
+              echo "HOSTNAME=databaes-landing-page-qa.databaes.net" >> $GITHUB_ENV
+              echo "ROUTER_NAME=databaes-landing-page-qa-router"    >> $GITHUB_ENV
+              echo "SVC_NAME=databaes-landing-page-qa-service"      >> $GITHUB_ENV
+              ;;
+            *)
+              echo "HOSTNAME=dev.databaes.net"                  >> $GITHUB_ENV
+              echo "ROUTER_NAME=dev-router"                     >> $GITHUB_ENV
+              echo "SVC_NAME=databaes-landing-page-dev-service" >> $GITHUB_ENV
+              ;;
+          esac
 
       - name: Upsert Traefik route
         env:
