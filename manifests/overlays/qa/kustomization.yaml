@@ -1,0 +1,30 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+configMapGenerator:
+  - name: landing-page-env
+    namespace: databaes-landing-page
+    files:
+      - environment.json
+      - topology.json
+      - recent-activity.json
+    options:
+      disableNameSuffixHash: true
+
+patches:
+  - target:
+      kind: Deployment
+      name: databaes-landing-page
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/requests/memory
+        value: 64Mi
+      - op: replace
+        path: /spec/template/spec/containers/0/resources/limits/memory
+        value: 128Mi
