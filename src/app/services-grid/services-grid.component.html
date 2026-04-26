@@ -1,10 +1,4 @@
 <section class="grid-section">
-  <div class="grid-section__header">
-    <p class="section-label">services</p>
-    <h2 class="section-heading">Running applications</h2>
-    <p class="grid-section__sub">Click any card to open the service · health polled every 30 s</p>
-  </div>
-
   @for (group of groups; track group.env) {
     @if (statesFor(group.env).length > 0) {
       <div class="env-group env-group--{{ group.env }}">

@@ -9,17 +9,7 @@ $env-colors: (
 );
 
 .grid-section {
-  padding: 48px 0;
-}
-
-.grid-section__header {
-  margin-bottom: 40px;
-}
-
-.grid-section__sub {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-top: 4px;
+  padding: 0 0 48px;
 }
 
 // ── Environment group ─────────────────────────────────────────────────────────
