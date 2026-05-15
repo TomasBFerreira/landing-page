@@ -106,7 +106,7 @@ export const SERVICES: ServiceDef[] = [
     name: 'Tomaj Flix',
     description: 'Self-hosted streaming front-end backed by streambox',
     env: 'prod',
-    url: 'https://tomajflix.databaes.net',
+    url: 'https://tomajflix.app',
     icon: '▶',
     tags: ['streaming', 'media'],
   },
