@@ -50,7 +50,7 @@ jobs:
     # Push-to-main path migrated to ARC ephemeral runners 2026-05-13 — routes
     # to the landing-page-dev scale set in dev k3s. workflow_dispatch stays
     # on the LXC runner as a fallback during soak.
-    runs-on: ${{ fromJSON((github.event_name == 'push' || inputs.env == 'dev') && '"landing-page-dev"' || format('["self-hosted","{0}"]', inputs.env)) }}
+    runs-on: ${{ fromJSON((github.event_name == 'push' || inputs.env == 'dev') && '"landing-page-dev"' || format('"landing-page-{0}"', inputs.env)) }}
     permissions:
       contents: read
       packages: read
