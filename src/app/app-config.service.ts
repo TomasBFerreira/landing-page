@@ -24,6 +24,14 @@ interface AppConfig {
    * injected into environment.json at deploy time.
    */
   grafanaToken?: string;
+
+  /**
+   * Authentik base URL for the self-service account hub (/account), e.g.
+   * https://auth.databaes.net (prod) or https://auth-dev.databaes.net (dev).
+   * The hub deep-links into Authentik's native user-settings + recovery flows.
+   * Defaults to the prod Authentik if unset.
+   */
+  authBaseUrl?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -32,6 +40,7 @@ export class AppConfigService {
   grafanaBaseUrl   = '';
   prometheusDsUid  = 'prometheus';
   grafanaToken     = '';
+  authBaseUrl      = 'https://auth.databaes.net';
 
   load(): Promise<void> {
     return fetch('/environment.json')
@@ -41,6 +50,7 @@ export class AppConfigService {
         this.grafanaBaseUrl  = (cfg.grafanaBaseUrl  ?? '').replace(/\/$/, '');
         this.prometheusDsUid =  cfg.prometheusDsUid ?? 'prometheus';
         this.grafanaToken    =  cfg.grafanaToken    ?? '';
+        this.authBaseUrl     = (cfg.authBaseUrl     ?? 'https://auth.databaes.net').replace(/\/$/, '');
       })
       .catch(() => console.error('Failed to load /environment.json — health sources not configured'));
   }
