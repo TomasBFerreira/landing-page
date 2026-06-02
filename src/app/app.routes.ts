@@ -17,6 +17,11 @@ export const routes: Routes = [
     title: 'About · databaes.net',
   },
   {
+    path: 'account',
+    loadComponent: () => import('./account/account.component').then(m => m.AccountComponent),
+    title: 'Account · databaes.net',
+  },
+  {
     path: 'admin',
     loadComponent: () => import('./admin/admin.component').then(m => m.AdminComponent),
     title: 'Admin · databaes.net',

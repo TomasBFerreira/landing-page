@@ -1,0 +1,102 @@
+.account {
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 3rem 1.25rem 4rem;
+}
+
+.account__head {
+  margin-bottom: 2.25rem;
+}
+
+.account__eyebrow {
+  color: var(--orange);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  margin: 0 0 0.5rem;
+}
+
+.account__title {
+  font-family: var(--sans);
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  font-weight: 600;
+  color: var(--text);
+  margin: 0 0 0.75rem;
+}
+
+.account__lede {
+  color: var(--text-muted);
+  max-width: 60ch;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.account__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.35rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  text-decoration: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--orange);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    outline: none;
+  }
+}
+
+.card__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius);
+  background: var(--orange-glow);
+  color: var(--orange);
+  margin-bottom: 0.25rem;
+}
+
+.card__title {
+  font-family: var(--sans);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  margin: 0;
+}
+
+.card__desc {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 0;
+  flex: 1;
+}
+
+.card__cta {
+  color: var(--orange);
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+.account__foot {
+  margin-top: 2.5rem;
+  color: var(--text-dim);
+  font-size: 0.85rem;
+
+  a {
+    color: var(--orange);
+  }
+}

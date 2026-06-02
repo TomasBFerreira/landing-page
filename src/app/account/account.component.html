@@ -1,0 +1,30 @@
+<section class="account">
+  <header class="account__head">
+    <p class="account__eyebrow mono">account · databaes.net</p>
+    <h1 class="account__title">Manage your account</h1>
+    <p class="account__lede">
+      Sign-in across databaes.net services is handled by
+      <span class="mono">Authentik</span>. Use the options below to update your
+      profile, change or reset your password, and manage two-factor security.
+      You may be asked to sign in.
+    </p>
+  </header>
+
+  <div class="account__grid">
+    @for (a of actions; track a.title) {
+      <a class="card" [href]="a.href" target="_blank" rel="noopener">
+        <div class="card__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path [attr.d]="a.icon" fill="currentColor"/></svg>
+        </div>
+        <h2 class="card__title">{{ a.title }}</h2>
+        <p class="card__desc">{{ a.description }}</p>
+        <span class="card__cta mono">{{ a.cta }} →</span>
+      </a>
+    }
+  </div>
+
+  <p class="account__foot mono">
+    Trouble signing in? Email
+    <a href="mailto:noreply@databaes.net">noreply&#64;databaes.net</a>.
+  </p>
+</section>
