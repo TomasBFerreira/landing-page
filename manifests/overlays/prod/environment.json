@@ -2,5 +2,6 @@
   "apiBaseUrl": "",
   "grafanaBaseUrl": "https://grafana.databaes.net",
   "prometheusDsUid": "prometheus",
-  "grafanaToken": "__GRAFANA_READER_TOKEN__"
+  "grafanaToken": "__GRAFANA_READER_TOKEN__",
+  "adminProbeUrl": "/admin-gate"
 }
