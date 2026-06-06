@@ -1,175 +1,82 @@
-.diagram-section {
-  padding: 16px 0 40px;
-}
-
-// ── Env selector ──────────────────────────────────────────────────────────────
-.env-selector {
-  display: flex;
-  gap: 6px;
-  margin: 0 0 16px;
-}
-
-.env-btn {
-  font-family: var(--mono);
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  text-transform: lowercase;
-  padding: 4px 12px;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-muted);
-  cursor: pointer;
-  transition: border-color 0.15s, color 0.15s, background 0.15s;
-
-  &:hover {
-    border-color: var(--orange);
-    color: var(--text);
-  }
-
-  &--active {
-    border-color: var(--orange);
-    color: var(--orange);
-    background: rgba(var(--c-orange), 0.10);
-  }
-
-  &--qa.env-btn--active {
-    border-color: var(--yellow);
-    color: var(--yellow);
-    background: rgba(var(--c-yellow), 0.10);
-  }
-
-  &--dev.env-btn--active {
-    border-color: var(--green);
-    color: var(--green);
-    background: rgba(var(--c-green), 0.10);
-  }
-}
-
-// ── Summary / status line ─────────────────────────────────────────────────────
-.topology-meta {
-  font-size: 12px;
-  color: var(--text-dim);
-  margin-bottom: 20px;
-
-  &__err { color: var(--red); }
-}
-
-// ── Topology grid ─────────────────────────────────────────────────────────────
-.topology {
+.topo {
   display: flex;
   flex-direction: column;
-  gap: 28px;
+  align-items: stretch;
 }
 
-.topology__tier-head {
-  display: flex;
-  align-items: baseline;
-  gap: 12px;
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid var(--border);
+.topo__layer {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
 }
 
-.topology__tier-label {
+.topo__layer-label {
+  display: block;
   font-size: 11px;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--orange);
-}
-
-.topology__tier-count {
-  font-size: 11px;
   color: var(--text-dim);
+  margin-bottom: 12px;
 }
 
-.topology__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 10px;
+.topo__nodes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-// ── Node card ─────────────────────────────────────────────────────────────────
-.node-card {
-  padding: 12px 14px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  transition: border-color 0.15s, background 0.15s;
-
-  &:hover {
-    border-color: rgba(var(--c-orange), 0.35);
-    background: var(--surface-2);
-  }
-
-  &[data-type="network"]        { border-left: 3px solid rgb(79, 70, 229); }
-  &[data-type="infrastructure"] { border-left: 3px solid var(--orange); }
-  &[data-type="service"]        { border-left: 3px solid var(--green); }
-  &[data-type="application"]    { border-left: 3px solid var(--yellow); }
-  &[data-type="database"]       { border-left: 3px solid rgb(2, 132, 199); }
-}
-
-.node-card__head {
+.topo__node {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  gap: 10px;
+  flex: 1 1 200px;
+  min-width: 180px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover { border-color: var(--border-strong); }
 }
 
-.node-card__icon {
-  font-size: 14px;
-  color: var(--text-muted);
-  width: 16px;
+.topo__node-icon {
+  font-size: 18px;
+  line-height: 1;
+  width: 22px;
   text-align: center;
 }
 
-.node-card__name {
-  font-size: 13px;
+.topo__node-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.topo__node-name {
+  font-size: 14px;
   font-weight: 600;
   color: var(--text);
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.node-card__desc {
+.topo__node-note {
   font-size: 12px;
   color: var(--text-muted);
-  line-height: 1.55;
-  margin: 4px 0 6px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
-.node-card__meta {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  font-size: 10px;
-  color: var(--text-dim);
-  letter-spacing: 0.05em;
-}
-
-.node-card__type {
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.node-card__sep { color: var(--border); }
-
-.node-card__sso {
-  color: var(--green);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 700;
+// Vertical link between layers.
+.topo__connector {
+  width: 2px;
+  height: 22px;
+  margin: 0 auto;
+  background: var(--border);
 }
 
 @media (max-width: 540px) {
-  .topology__grid {
-    grid-template-columns: 1fr;
-  }
+  .topo__node { flex-basis: 100%; }
 }

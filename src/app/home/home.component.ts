@@ -16,7 +16,7 @@ export class HomeComponent implements OnInit {
   /** Fallback hero — same copy as Directus ships. Served while the CMS
    *  fetch is in flight and if it fails (CORS, 5xx, network). */
   readonly hero = signal<HeroContent>({
-    eyebrow:      '// homelab · proxmox · k3s · vault · authentik',
+    eyebrow:      'Homelab · Proxmox · k3s · Vault · Authentik',
     title_prefix: 'data',
     title_accent: 'baes',
     title_suffix: '.net',

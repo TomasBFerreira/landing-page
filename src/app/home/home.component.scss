@@ -1,41 +1,13 @@
 // ── Hero ─────────────────────────────────────────────────────────────────────
 .hero {
-  background: linear-gradient(180deg, var(--surface) 0%, var(--bg) 100%);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
-  padding: 96px 0 88px;
+  padding: 88px 0 72px;
   position: relative;
-  overflow: hidden;
-
-  // Subtle terminal grid. Opacity calibrated per theme via --border so the
-  // grid is visible-but-quiet in dark and just-barely in light.
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image:
-      linear-gradient(var(--border) 1px, transparent 1px),
-      linear-gradient(90deg, var(--border) 1px, transparent 1px);
-    background-size: 44px 44px;
-    opacity: 0.45;
-    mask-image: radial-gradient(ellipse at top, black 20%, transparent 70%);
-    -webkit-mask-image: radial-gradient(ellipse at top, black 20%, transparent 70%);
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    top: -120px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 760px;
-    height: 380px;
-    background: radial-gradient(ellipse, var(--orange-glow) 0%, transparent 70%);
-    pointer-events: none;
-  }
 }
 
 .hero__inner {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 24px;
   position: relative;
@@ -43,18 +15,19 @@
 }
 
 .hero__eyebrow {
-  font-size: 12px;
-  letter-spacing: 0.1em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   color: var(--orange);
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .hero__title {
-  font-size: clamp(44px, 7.5vw, 88px);
+  font-size: clamp(40px, 6.5vw, 72px);
   font-weight: 700;
-  line-height: 1.02;
-  letter-spacing: -0.045em;
-  margin-bottom: 24px;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  margin-bottom: 22px;
   color: var(--text);
 }
 
@@ -90,13 +63,13 @@
 
 // ── Home body ────────────────────────────────────────────────────────────────
 .home__inner {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px 88px;
+  padding: 0 24px 96px;
 }
 
 .home__section {
-  margin-top: 72px;
+  margin-top: 80px;
 }
 
 .home__section-sub {

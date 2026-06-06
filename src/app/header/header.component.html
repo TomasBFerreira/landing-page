@@ -3,7 +3,7 @@
 
     <a class="header__brand" routerLink="/" aria-label="databaes.net home">
       <div class="header__logo">
-        <svg width="30" height="30" viewBox="0 0 32 32" fill="none">
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none">
           <rect width="32" height="32" rx="8" fill="currentColor" fill-opacity="0.12"/>
           <rect x="1" y="1" width="30" height="30" rx="7" stroke="currentColor" stroke-opacity="0.35" stroke-width="1"/>
           <rect x="6"  y="8"  width="20" height="3" rx="1.5" fill="currentColor"/>
@@ -11,58 +11,58 @@
           <rect x="6"  y="20" width="17" height="3" rx="1.5" fill="currentColor" fill-opacity="0.4"/>
         </svg>
       </div>
-      <div class="header__wordmark">
-        <span class="header__site">databaes.net</span>
-        <span class="header__tagline">homelab infrastructure</span>
-      </div>
+      <span class="header__site">databaes.net</span>
     </a>
 
     <nav class="header__nav" aria-label="Primary">
-      <a class="header__nav-link mono"
+      <a class="header__nav-link"
          routerLink="/"
          routerLinkActive="header__nav-link--active"
-         [routerLinkActiveOptions]="{ exact: true }">home</a>
-      <a class="header__nav-link mono"
+         [routerLinkActiveOptions]="{ exact: true }">Home</a>
+      <!-- /investing is a separate app on the apex host; a routerLink would be
+           captured by the SPA router, so use a real navigation. -->
+      <a class="header__nav-link" href="/investing">Investing</a>
+      <a class="header__nav-link"
          routerLink="/showcase"
-         routerLinkActive="header__nav-link--active">showcase</a>
-      <a class="header__nav-link mono"
+         routerLinkActive="header__nav-link--active">Showcase</a>
+      <a class="header__nav-link"
          routerLink="/about"
-         routerLinkActive="header__nav-link--active">about</a>
-      <a class="header__nav-link mono"
-         routerLink="/account"
-         routerLinkActive="header__nav-link--active">account</a>
-      <a class="header__nav-link mono"
-         routerLink="/admin"
-         routerLinkActive="header__nav-link--active">admin</a>
+         routerLinkActive="header__nav-link--active">About</a>
+      @if (auth.signedIn) {
+        <a class="header__nav-link"
+           routerLink="/account"
+           routerLinkActive="header__nav-link--active">Account</a>
+        <a class="header__nav-link"
+           routerLink="/admin"
+           routerLinkActive="header__nav-link--active">Admin</a>
+      }
     </nav>
 
-    <div class="header__status-bar">
-      <div class="header__clock mono" aria-hidden="true">{{ currentTime() | date:'HH:mm:ss' }}</div>
-
-      <div class="header__status-pill"
-           role="status"
-           aria-live="polite"
-           aria-atomic="true"
-           [class.header__status-pill--ok]="allUp()">
+    <div class="header__actions">
+      <a class="header__status-pill"
+         routerLink="/"
+         role="status"
+         aria-live="polite"
+         aria-atomic="true"
+         [class.header__status-pill--ok]="allUp()"
+         [class.header__status-pill--down]="downCount() > 0">
         <span class="status-dot"
               aria-hidden="true"
               [class.status-dot--up]="allUp()"
               [class.status-dot--pending]="!allUp() && downCount() === 0"
               [class.status-dot--down]="downCount() > 0"></span>
-        <span class="mono">
-          @if (allUp()) { all systems operational }
-          @else if (downCount() > 0) { {{ downCount() }} service{{ downCount() > 1 ? 's' : '' }} down }
-          @else { checking... }
+        <span class="header__status-text">
+          @if (allUp()) { All systems operational }
+          @else if (downCount() > 0) { {{ downCount() }} down }
+          @else { Checking… }
         </span>
-      </div>
+      </a>
 
-      <div class="header__counts mono" [attr.aria-label]="'Service counts: ' + upCount() + ' up, ' + downCount() + ' down, ' + total() + ' total'">
-        <span class="header__count header__count--up" aria-hidden="true">{{ upCount() }} up</span>
-        <span class="header__sep" aria-hidden="true">/</span>
-        <span class="header__count header__count--down" aria-hidden="true">{{ downCount() }} down</span>
-        <span class="header__sep" aria-hidden="true">/</span>
-        <span class="header__count" aria-hidden="true">{{ total() }} total</span>
-      </div>
+      @if (auth.signedIn) {
+        <button type="button" class="header__btn header__btn--ghost" (click)="logout()">Sign out</button>
+      } @else {
+        <button type="button" class="header__btn header__btn--primary" (click)="login()">Log in</button>
+      }
 
       <button type="button"
               class="header__theme-toggle"

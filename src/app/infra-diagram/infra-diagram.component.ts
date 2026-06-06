@@ -1,17 +1,28 @@
-import { Component, computed, signal, OnInit } from '@angular/core';
-import { CommonModule }       from '@angular/common';
-import { HealthCheckService } from '../health-check.service';
-import { TopologyService, TopologyNode } from '../topology.service';
+import { Component }          from '@angular/core';
+import { CommonModule }        from '@angular/common';
+import { HealthCheckService }  from '../health-check.service';
 import { ServiceStatus }       from '../models/service.model';
 
-type Env = 'PROD' | 'QA' | 'DEV';
-
-interface TierGroup {
-  tier:   string;
-  label:  string;
-  nodes:  TopologyNode[];
+interface TopoNode {
+  name: string;
+  icon: string;
+  /** Matches a SERVICES id so we can show a live status dot; omit for structural nodes. */
+  serviceId?: string;
+  note?: string;
 }
 
+interface TopoLayer {
+  label: string;
+  nodes: TopoNode[];
+}
+
+/**
+ * A curated, clean topology map of the platform underneath the apps. Unlike the
+ * old CMDB-snapshot dump, this is hand-shaped for legibility on the public page:
+ * a few labelled layers from the edge down to compute. Where a node maps to a
+ * probed service we surface its live status dot from HealthCheckService; purely
+ * structural nodes (Cloudflare, Proxmox, k3s) render without a dot.
+ */
 @Component({
   selector: 'app-infra-diagram',
   standalone: true,
@@ -19,72 +30,44 @@ interface TierGroup {
   templateUrl: './infra-diagram.component.html',
   styleUrl: './infra-diagram.component.scss',
 })
-export class InfraDiagramComponent implements OnInit {
-  activeEnv = signal<Env>('PROD');
-
-  /** Tier metadata, in the render order we want (0 first, unlabelled last). */
-  private readonly TIER_LABELS: Array<{ tier: string; label: string }> = [
-    { tier: '0',   label: 'Tier 0 · foundation' },
-    { tier: '0.5', label: 'Tier 0.5 · shared platform' },
-    { tier: '1',   label: 'Tier 1 · runtime' },
-    { tier: '2',   label: 'Tier 2 · applications' },
-    { tier: '',    label: 'Unclassified' },
+export class InfraDiagramComponent {
+  readonly layers: TopoLayer[] = [
+    {
+      label: 'Edge',
+      nodes: [
+        { name: 'Cloudflare', icon: '🌐', note: 'tunnel + DNS' },
+        { name: 'Traefik', icon: '⇆', serviceId: 'traefik', note: 'reverse proxy' },
+      ],
+    },
+    {
+      label: 'Identity & secrets',
+      nodes: [
+        { name: 'Authentik', icon: '🪪', serviceId: 'authentik', note: 'SSO / OIDC' },
+        { name: 'Vault', icon: '🔐', serviceId: 'vault-prod', note: 'secrets' },
+      ],
+    },
+    {
+      label: 'Cluster & compute',
+      nodes: [
+        { name: 'Rancher', icon: '☸', serviceId: 'rancher', note: 'k3s mgmt' },
+        { name: 'k3s', icon: '⬡', note: 'kubernetes' },
+        { name: 'Proxmox', icon: '🖧', note: 'hypervisor' },
+      ],
+    },
+    {
+      label: 'Observability & automation',
+      nodes: [
+        { name: 'Grafana', icon: '◷', serviceId: 'grafana', note: 'metrics & logs' },
+        { name: 'Semaphore', icon: '⚙', serviceId: 'semaphore', note: 'ansible' },
+      ],
+    },
   ];
 
-  readonly tierGroups = computed<TierGroup[]>(() => {
-    const envNodes = this.topology.nodes().filter(n => n.env === this.activeEnv());
-    return this.TIER_LABELS
-      .map(({ tier, label }) => ({
-        tier,
-        label,
-        nodes: envNodes
-          .filter(n => (n.tier || '') === tier)
-          .sort((a, b) => a.name.localeCompare(b.name)),
-      }))
-      .filter(g => g.nodes.length > 0);
-  });
+  constructor(private health: HealthCheckService) {}
 
-  readonly totalForEnv = computed(() =>
-    this.topology.nodes().filter(n => n.env === this.activeEnv()).length);
-
-  constructor(private health: HealthCheckService, readonly topology: TopologyService) {}
-
-  ngOnInit(): void {
-    // Snapshot carries all envs; fetch once, filter client-side.
-    this.topology.load();
-  }
-
-  setEnv(env: Env) {
-    this.activeEnv.set(env);
-  }
-
-  /**
-   * Map a CI's name to a ServiceStatus using the already-live HealthCheckService
-   * (which sources from Grafana probes). We match by name OR by URL → name.
-   * For CIs without a matching probe target we return 'unknown' — expected for
-   * infrastructure items like "vault-blue-prod" that aren't HTTP probed.
-   */
-  statusFor(node: TopologyNode): ServiceStatus {
-    // Normalise CI name against HealthCheckService states (which key by service.id).
-    const match = this.health.states().find(s =>
-      s.service.id === node.name || s.service.name === node.name,
-    );
+  statusFor(node: TopoNode): ServiceStatus | null {
+    if (!node.serviceId) return null;
+    const match = this.health.states().find(s => s.service.id === node.serviceId);
     return match?.status ?? 'unknown';
-  }
-
-  /** Visual glyph per type. Kept small and ASCII-friendly. */
-  iconFor(node: TopologyNode): string {
-    switch (node.type) {
-      case 'application':     return '▣';
-      case 'service':         return '◆';
-      case 'infrastructure':  return '⬢';
-      case 'network':         return '⇄';
-      case 'database':        return '⛁';
-      default:                return '•';
-    }
-  }
-
-  dotClass(node: TopologyNode): string {
-    return `status-dot status-dot--${this.statusFor(node)}`;
   }
 }

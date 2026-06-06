@@ -32,6 +32,22 @@ interface AppConfig {
    * Defaults to the prod Authentik if unset.
    */
   authBaseUrl?: string;
+
+  /**
+   * Same-origin path gated by Authentik forwardAuth, probed to detect whether
+   * the visitor is signed in (see AuthService). Defaults to the gated
+   * `/investing/account` route that exists on every env.
+   */
+  authProbeUrl?: string;
+
+  /**
+   * Where the nav "Login" button sends the user. `{next}` is replaced with the
+   * URL-encoded current location so Authentik returns here after sign-in.
+   */
+  loginUrl?: string;
+
+  /** Authentik sign-out URL. `{next}` is replaced with the encoded origin. */
+  logoutUrl?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -41,6 +57,9 @@ export class AppConfigService {
   prometheusDsUid  = 'prometheus';
   grafanaToken     = '';
   authBaseUrl      = 'https://auth.databaes.net';
+  authProbeUrl     = '/investing/account';
+  loginUrl         = '/investing/account?next={next}';
+  logoutUrl        = 'https://auth.databaes.net/if/flow/default-invalidation-flow/?next={next}';
 
   load(): Promise<void> {
     return fetch('/environment.json')
@@ -51,6 +70,9 @@ export class AppConfigService {
         this.prometheusDsUid =  cfg.prometheusDsUid ?? 'prometheus';
         this.grafanaToken    =  cfg.grafanaToken    ?? '';
         this.authBaseUrl     = (cfg.authBaseUrl     ?? 'https://auth.databaes.net').replace(/\/$/, '');
+        this.authProbeUrl    =  cfg.authProbeUrl    ?? '/investing/account';
+        this.loginUrl        =  cfg.loginUrl        ?? '/investing/account?next={next}';
+        this.logoutUrl       =  cfg.logoutUrl       ?? `${this.authBaseUrl}/if/flow/default-invalidation-flow/?next={next}`;
       })
       .catch(() => console.error('Failed to load /environment.json — health sources not configured'));
   }

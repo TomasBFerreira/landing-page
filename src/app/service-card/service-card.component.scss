@@ -5,11 +5,17 @@
   padding: 18px;
   color: var(--text);
   text-decoration: none;
-  transition: background 0.15s, box-shadow 0.15s, border-radius 0.1s, transform 0.15s;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s, border-color 0.15s, transform 0.15s;
 
   &:hover {
-    background: var(--surface-2);
     text-decoration: none;
+    border-color: var(--border-strong);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
 
     .card__arrow { color: var(--orange); opacity: 1; }
   }

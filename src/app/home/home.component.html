@@ -22,22 +22,22 @@
 <div class="home__inner">
 
   <section class="home__section">
-    <p class="section-label">live</p>
-    <h2 class="section-heading">Network topology</h2>
+    <p class="section-label">Apps</p>
+    <h2 class="section-heading">Services &amp; apps</h2>
     <p class="home__section-sub">
-      Live view of the stack. Dots reflect the latest health poll; the env
-      selector scopes the diagram to prod, QA, or dev.
+      Everything running on the homelab. Health is polled every 30 seconds —
+      click any card to open the service.
     </p>
-    <app-infra-diagram />
+    <app-services-grid />
   </section>
 
   <section class="home__section">
-    <p class="section-label">services</p>
-    <h2 class="section-heading">What's running right now</h2>
+    <p class="section-label">Infrastructure</p>
+    <h2 class="section-heading">How it fits together</h2>
     <p class="home__section-sub">
-      Health is polled every 30 seconds. Click any card to jump to the service.
+      The platform underneath the apps, from the edge down to the cluster.
     </p>
-    <app-services-grid />
+    <app-infra-diagram />
   </section>
 
 </div>
