@@ -24,26 +24,39 @@ export class AuthService {
   /** 'unknown' until the first probe resolves; templates treat it as signed-out. */
   readonly status = signal<AuthStatus>('unknown');
 
+  /** True only when an admin-gated probe confirms membership (fail-closed). */
+  readonly isAdmin = signal<boolean>(false);
+
   constructor(private config: AppConfigService) {}
 
   /** Probe the gated endpoint once. Safe to call on app init. */
   check(): void {
-    fetch(this.config.authProbeUrl, {
+    this.probe(this.config.authProbeUrl).then((ok) => {
+      this.status.set(ok ? 'in' : 'out');
+      // Only bother with the admin probe once we know there's a session, and
+      // only if an admin-gated URL is configured. Otherwise admin stays hidden.
+      if (ok && this.config.adminProbeUrl) {
+        this.probe(this.config.adminProbeUrl).then((isAdmin) => this.isAdmin.set(isAdmin));
+      } else {
+        this.isAdmin.set(false);
+      }
+    });
+  }
+
+  /** Resolve true iff `url` answers 2xx (authenticated/authorised); a 3xx
+   *  bounce to Authentik surfaces as opaqueredirect, a denial as a non-2xx. */
+  private probe(url: string): Promise<boolean> {
+    return fetch(url, {
       method: 'GET',
       redirect: 'manual',
       credentials: 'include',
       cache: 'no-store',
     })
       .then((res) => {
-        // `redirect: 'manual'` surfaces a 3xx as an opaqueredirect (type), and
-        // some browsers report status 0. Either means "not authenticated".
-        if (res.type === 'opaqueredirect' || res.status === 0) {
-          this.status.set('out');
-        } else {
-          this.status.set(res.ok ? 'in' : 'out');
-        }
+        if (res.type === 'opaqueredirect' || res.status === 0) return false;
+        return res.ok;
       })
-      .catch(() => this.status.set('out'));
+      .catch(() => false);
   }
 
   /** Full-page navigation into Authentik, returning here afterwards. */

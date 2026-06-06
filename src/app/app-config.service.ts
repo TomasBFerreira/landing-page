@@ -48,6 +48,14 @@ interface AppConfig {
 
   /** Authentik sign-out URL. `{next}` is replaced with the encoded origin. */
   logoutUrl?: string;
+
+  /**
+   * Same-origin path gated by Authentik to an ADMIN group, probed to decide
+   * whether to show the Admin nav link. Empty (default) → the link is hidden
+   * for everyone (fail-closed). Set this to a path you've gated to your admin
+   * group to light it up for admins only.
+   */
+  adminProbeUrl?: string;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -60,6 +68,7 @@ export class AppConfigService {
   authProbeUrl     = '/investing/account';
   loginUrl         = '/investing/account?next={next}';
   logoutUrl        = 'https://auth.databaes.net/if/flow/default-invalidation-flow/?next={next}';
+  adminProbeUrl    = '';
 
   load(): Promise<void> {
     return fetch('/environment.json')
@@ -73,6 +82,7 @@ export class AppConfigService {
         this.authProbeUrl    =  cfg.authProbeUrl    ?? '/investing/account';
         this.loginUrl        =  cfg.loginUrl        ?? '/investing/account?next={next}';
         this.logoutUrl       =  cfg.logoutUrl       ?? `${this.authBaseUrl}/if/flow/default-invalidation-flow/?next={next}`;
+        this.adminProbeUrl   =  cfg.adminProbeUrl   ?? '';
       })
       .catch(() => console.error('Failed to load /environment.json — health sources not configured'));
   }

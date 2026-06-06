@@ -32,6 +32,8 @@
         <a class="header__nav-link"
            routerLink="/account"
            routerLinkActive="header__nav-link--active">Account</a>
+      }
+      @if (auth.isAdmin()) {
         <a class="header__nav-link"
            routerLink="/admin"
            routerLinkActive="header__nav-link--active">Admin</a>
