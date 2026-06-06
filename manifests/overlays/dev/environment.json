@@ -2,5 +2,6 @@
   "apiBaseUrl": "https://databaes-status-api-dev.databaes.net",
   "grafanaBaseUrl": "",
   "prometheusDsUid": "prometheus",
-  "grafanaToken": ""
+  "grafanaToken": "",
+  "adminProbeUrl": "/admin-gate"
 }
