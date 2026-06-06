@@ -66,6 +66,16 @@ export const SERVICES: ServiceDef[] = [
     tags: ['cmdb', 'ops'],
   },
   {
+    id: 'investing',
+    name: 'Investing',
+    description: 'Trading 212 pie builder — themed baskets incl. US congressional trades',
+    env: 'prod',
+    // Served as a sub-app on the apex host behind Traefik PathPrefix(/investing).
+    url: 'https://databaes.net/investing',
+    icon: '📈',
+    tags: ['finance', 'app'],
+  },
+  {
     id: 'wikijs',
     name: 'Wiki.js',
     description: 'Internal knowledge base — runbooks, architecture, docs',
@@ -154,5 +164,14 @@ export const SERVICES: ServiceDef[] = [
     url: 'https://semaphore.databaes.net',
     icon: '⚙',
     tags: ['ansible', 'ops'],
+  },
+  {
+    id: 'signup',
+    name: 'Sign up',
+    description: 'Self-service account registration for the databaes.net homelab',
+    env: 'prod',
+    url: 'https://signup.databaes.net',
+    icon: '📝',
+    tags: ['account'],
   },
 ];

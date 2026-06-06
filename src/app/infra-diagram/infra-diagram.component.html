@@ -1,74 +1,27 @@
-<section class="diagram-section">
-  <!-- Environment selector -->
-  <div class="env-selector" role="group" aria-label="Topology environment filter">
-    <button type="button"
-            class="env-btn"
-            [class.env-btn--active]="activeEnv() === 'PROD'"
-            [attr.aria-pressed]="activeEnv() === 'PROD'"
-            (click)="setEnv('PROD')">prod</button>
-    <button type="button"
-            class="env-btn env-btn--qa"
-            [class.env-btn--active]="activeEnv() === 'QA'"
-            [attr.aria-pressed]="activeEnv() === 'QA'"
-            (click)="setEnv('QA')">qa</button>
-    <button type="button"
-            class="env-btn env-btn--dev"
-            [class.env-btn--active]="activeEnv() === 'DEV'"
-            [attr.aria-pressed]="activeEnv() === 'DEV'"
-            (click)="setEnv('DEV')">dev</button>
-  </div>
-
-  <!-- Topology summary -->
-  <div class="topology-meta mono"
-       role="status"
-       aria-live="polite">
-    @if (topology.error()) {
-      <span class="topology-meta__err">{{ topology.error() }}</span>
-    } @else if (!topology.loaded()) {
-      <span>loading topology…</span>
-    } @else {
-      <span>{{ totalForEnv() }} configuration items in {{ activeEnv() }}</span>
-    }
-  </div>
-
-  <!-- Tiered node grid -->
-  @if (topology.loaded() && tierGroups().length > 0) {
-    <div class="topology">
-      @for (group of tierGroups(); track group.tier) {
-        <section class="topology__tier" [attr.data-tier]="group.tier">
-          <header class="topology__tier-head">
-            <span class="topology__tier-label mono">{{ group.label }}</span>
-            <span class="topology__tier-count mono">{{ group.nodes.length }}</span>
-          </header>
-          <div class="topology__grid">
-            @for (node of group.nodes; track node.id) {
-              <article class="node-card"
-                       [attr.data-type]="node.type"
-                       [attr.aria-label]="node.name + ' — ' + node.type + (node.description ? ', ' + node.description : '')">
-                <div class="node-card__head">
-                  <span class="node-card__icon" aria-hidden="true">{{ iconFor(node) }}</span>
-                  <span class="node-card__name">{{ node.name }}</span>
-                  <span [class]="dotClass(node)" aria-hidden="true"></span>
-                </div>
-                @if (node.description) {
-                  <p class="node-card__desc">{{ node.description }}</p>
-                }
-                <div class="node-card__meta mono">
-                  <span class="node-card__type">{{ node.type }}</span>
-                  @if (node.primary_node) {
-                    <span class="node-card__sep" aria-hidden="true">·</span>
-                    <span class="node-card__host">{{ node.primary_node }}</span>
-                  }
-                  @if (node.sso_enabled) {
-                    <span class="node-card__sep" aria-hidden="true">·</span>
-                    <span class="node-card__sso">sso</span>
-                  }
-                </div>
-              </article>
+<div class="topo">
+  @for (layer of layers; track layer.label; let last = $last) {
+    <div class="topo__layer">
+      <span class="topo__layer-label">{{ layer.label }}</span>
+      <div class="topo__nodes">
+        @for (node of layer.nodes; track node.name) {
+          <div class="topo__node" [attr.aria-label]="node.name + (node.note ? ' — ' + node.note : '')">
+            <span class="topo__node-icon" aria-hidden="true">{{ node.icon }}</span>
+            <span class="topo__node-body">
+              <span class="topo__node-name">{{ node.name }}</span>
+              @if (node.note) { <span class="topo__node-note">{{ node.note }}</span> }
+            </span>
+            @if (statusFor(node); as st) {
+              <span class="status-dot"
+                    aria-hidden="true"
+                    [class.status-dot--up]="st === 'up'"
+                    [class.status-dot--down]="st === 'down'"
+                    [class.status-dot--pending]="st === 'pending'"
+                    [class.status-dot--unknown]="st === 'unknown'"></span>
             }
           </div>
-        </section>
-      }
+        }
+      </div>
     </div>
+    @if (!last) { <div class="topo__connector" aria-hidden="true"></div> }
   }
-</section>
+</div>

@@ -1,8 +1,9 @@
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, OnInit } from '@angular/core';
 import { CommonModule }       from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { HealthCheckService } from '../health-check.service';
 import { ThemeService }       from '../theme.service';
+import { AuthService }        from '../auth.service';
 
 @Component({
   selector: 'app-header',
@@ -12,18 +13,22 @@ import { ThemeService }       from '../theme.service';
   styleUrl: './header.component.scss',
 })
 export class HeaderComponent implements OnInit {
-  currentTime = signal(new Date());
-
-  upCount   = computed(() => this.health.states().filter(s => s.status === 'up').length);
   downCount = computed(() => this.health.states().filter(s => s.status === 'down').length);
   total     = computed(() => this.health.states().length);
-  allUp     = computed(() => this.downCount() === 0 && this.total() > 0 && this.upCount() === this.total());
+  allUp     = computed(() => this.downCount() === 0 && this.total() > 0
+    && this.health.states().filter(s => s.status === 'up').length === this.total());
 
-  constructor(private health: HealthCheckService, readonly theme: ThemeService) {}
+  constructor(
+    private health: HealthCheckService,
+    readonly theme: ThemeService,
+    readonly auth: AuthService,
+  ) {}
 
   ngOnInit(): void {
-    setInterval(() => this.currentTime.set(new Date()), 1000);
+    this.auth.check();
   }
 
   toggleTheme() { this.theme.toggle(); }
+  login()       { this.auth.login(); }
+  logout()      { this.auth.logout(); }
 }
