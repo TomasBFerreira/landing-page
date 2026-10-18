@@ -98,14 +98,14 @@ const L = {
 // ── App catalogue ────────────────────────────────────────────────────────────
 const A = {
   opsPortal: (extra: Svc[] = [], dbs = 5): AppDef => ({
-    name: 'Ops Portal', icon: 'golang', paths: both, access: 'sso', serviceId: 'ops-portal',
+    name: 'Ops Portal', icon: 'databaes', paths: both, access: 'sso', serviceId: 'ops-portal',
     desc: 'The operations portal: a mesh of small Go services behind an Angular shell, each with its own database.',
     workloads: [
       { label: 'Shell', icon: 'angular' }, go('Identity'), go('CMDB'), go('Audit'), go('Infrastructure'),
       go('Incidents'), go('Deployments'), go('Domain'), ...extra, { label: `PostgreSQL ×${dbs}`, icon: 'postgresql' },
     ] }),
   tomajflix: (): AppDef => ({
-    name: 'Tomaj Flix', icon: 'svelte', paths: both, serviceId: 'tomajflix',
+    name: 'Tomaj Flix', icon: 'tomajflix', paths: both, serviceId: 'tomajflix',
     desc: 'Private streaming platform.',
     workloads: [go('Go API'), { label: 'SvelteKit UI', icon: 'svelte' }] }),
   media: (): AppDef => ({
@@ -123,20 +123,20 @@ const A = {
     name: 'Directus CMS', icon: 'directus', paths: both, serviceId: 'directus-cms',
     desc: 'Headless CMS behind the landing page copy.', workloads: [{ label: 'Directus', icon: 'directus' }, pg] }),
   investing: (): AppDef => ({
-    name: 'Investing', paths: both, serviceId: 'investing', access: 'sso',
+    name: 'Investing', icon: 'investing', paths: both, serviceId: 'investing', access: 'sso',
     desc: 'Trading 212 pie tracker driven by US politician trades.',
     workloads: [{ label: 'API' }, { label: 'Web' }, pg] }),
   chess: (): AppDef => ({
-    name: 'My Chess Coach', paths: both, serviceId: 'mcc', access: 'sso',
+    name: 'My Chess Coach', icon: 'mcc', paths: both, serviceId: 'mcc', access: 'sso',
     desc: 'Openings, puzzles and game review.', workloads: [{ label: 'App' }, pg] }),
   wedding: (): AppDef => ({
-    name: 'Wedding', icon: 'golang', paths: both, serviceId: 'wedding',
+    name: 'Wedding', icon: 'wedding', paths: both, serviceId: 'wedding',
     desc: 'Guest registration, meal and hotel choices.', workloads: [go('Go app'), pg] }),
   landing: (): AppDef => ({
-    name: 'Landing page', icon: 'angular', paths: both,
+    name: 'Landing page', icon: 'databaes', paths: both,
     desc: 'This site: Angular on nginx.', workloads: [{ label: 'nginx', icon: 'nginx' }, { label: 'Angular', icon: 'angular' }] }),
   signup: (): AppDef => ({
-    name: 'Sign up', icon: 'angular', paths: both, serviceId: 'signup',
+    name: 'Sign up', icon: 'databaes', paths: both, serviceId: 'signup',
     desc: 'Self-service account sign-up.', workloads: [{ label: 'nginx', icon: 'nginx' }] }),
   statusApi: (): AppDef => ({
     name: 'Status API', icon: 'golang', paths: both,
@@ -146,7 +146,7 @@ const A = {
     desc: 'Private Java Edition server. Tailnet-only: no public route and no hostname.',
     workloads: [{ label: 'Minecraft server', icon: 'minecraft' }] }),
   minecraftConsole: (): AppDef => ({
-    name: 'Minecraft Console', icon: 'golang', paths: both, serviceId: 'mc-console', access: 'sso',
+    name: 'Minecraft Console', icon: 'databaes', paths: both, serviceId: 'mc-console', access: 'sso',
     desc: 'Start, stop and configure the Minecraft servers.', workloads: [go('Go service')] }),
   telemetry: (): AppDef => ({
     name: 'Telemetry agents', icon: 'opentelemetry', paths: [],

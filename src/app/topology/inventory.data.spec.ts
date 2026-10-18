@@ -49,11 +49,11 @@ describe('inventory data', () => {
   it('keeps the vendored icon set in sync', () => {
     // Update this list when adding a file to public/icons (the build serves them as-is).
     const vendored = new Set([
-      'adguard-home', 'alloy', 'angular', 'ansible', 'authentik', 'clickhouse', 'cloudflare', 'directus', 'github',
-      'golang', 'grafana', 'jellyseerr', 'k3s', 'loki', 'minecraft', 'mosquitto', 'nextcloud', 'nginx', 'nvidia',
+      'adguard-home', 'alloy', 'angular', 'ansible', 'authentik', 'clickhouse', 'cloudflare', 'databaes', 'directus', 'github',
+      'golang', 'grafana', 'investing', 'jellyseerr', 'k3s', 'loki', 'mcc', 'minecraft', 'mosquitto', 'nextcloud', 'nginx', 'nvidia',
       'opentelemetry', 'pi-hole', 'postgresql', 'prometheus', 'prowlarr', 'proxmox-backup-server', 'qbittorrent',
       'radarr', 'rancher', 'redis', 'semaphore', 'signoz', 'sonarr', 'svelte', 'tailscale', 'telegraf', 'tempo',
-      'traefik', 'vault', 'wikijs', 'wireguard', 'zigbee2mqtt',
+      'tomajflix', 'traefik', 'vault', 'wedding', 'wikijs', 'wireguard', 'zigbee2mqtt',
     ]);
     for (const k of inventoryIcons()) expect(vendored.has(k)).withContext(k).toBeTrue();
   });

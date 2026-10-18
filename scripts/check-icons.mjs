@@ -13,7 +13,7 @@ for (const m of src.matchAll(/icons:[^\n]*/g)) {
   for (const k of m[0].matchAll(/'([a-z0-9-]+)'/g)) used.add(k[1]);
 }
 
-const files = new Set(readdirSync(join(root, 'public/icons')).filter(f => f.endsWith('.svg')).map(f => f.slice(0, -4)));
+const files = new Set(readdirSync(join(root, 'public/icons')).filter(f => /\.(svg|png)$/.test(f)).map(f => f.replace(/\.(svg|png)$/, '')));
 
 const missing = [...used].filter(k => !files.has(k)).sort();
 const unused = [...files].filter(k => !used.has(k)).sort();

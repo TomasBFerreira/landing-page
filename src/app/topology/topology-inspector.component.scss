@@ -6,6 +6,9 @@
   margin-top: 28px;
 }
 
+// On wide screens the diagram itself shows everything; this list is the phone view.
+@media (min-width: 861px) { :host { display: none; } }
+
 [data-theme="dark"] :host { --route-public: #60a5fa; --icon-bg: #f5f5f4; }
 
 :host { --lit: var(--route-public); }

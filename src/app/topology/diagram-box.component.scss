@@ -1,0 +1,31 @@
+:host {
+  --route-public: #2563eb;
+  --route-private: var(--orange);
+  --lit: var(--route-public);
+  --tile-bg: #fff;
+  cursor: pointer;
+  outline: none;
+}
+:host-context([data-theme="dark"]) { --route-public: #60a5fa; --tile-bg: #f5f5f4; }
+:host([data-mode="private"]) { --lit: var(--route-private); }
+
+text { font-family: var(--sans); fill: var(--text); dominant-baseline: central; }
+
+.bg { fill: var(--surface); stroke: var(--border); stroke-width: 1; transition: stroke 0.2s, fill 0.2s; }
+:host(:hover) .bg { stroke: var(--border-strong); }
+:host([data-state="lit"]) .bg { stroke: var(--lit); stroke-width: 2; fill: color-mix(in srgb, var(--lit) 7%, var(--surface)); }
+:host([data-state="dim"]) { opacity: 0.45; }
+:host(.off) { opacity: 0.5; }
+:host(.off) .bg { stroke-dasharray: 4 3; }
+:host(.sel) .bg { stroke: var(--text); stroke-width: 2.5; }
+:host(:focus-visible) .bg { stroke: var(--route-public); stroke-width: 3; }
+
+.tile { fill: var(--tile-bg); stroke: var(--border); }
+.letter { font-size: 14px; font-weight: 700; text-anchor: middle; fill: #57534e !important; }
+.name { font-size: 13px; font-weight: 600; }
+.tag { font-size: 10px; text-anchor: end; fill: var(--text-dim) !important; }
+.dot { fill: var(--text-dim); &.up { fill: var(--green); } &.down { fill: var(--red); } }
+
+.pill rect:first-child { fill: var(--surface-2); stroke: var(--border); }
+.pill .ptile { fill: var(--tile-bg); stroke: none; }
+.pill text { font-size: 11px; }

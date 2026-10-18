@@ -8,33 +8,23 @@
 
 .topo { position: relative; }
 
-// ── Mode toggle ───────────────────────────────────────────────────────────────
-.topo__controls {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 16px;
+// ── Controls ──────────────────────────────────────────────────────────────────
+.topo__bar {
+  display: flex; flex-wrap: wrap; align-items: stretch; justify-content: space-between;
+  gap: 10px; margin-bottom: 16px;
 }
+.topo__controls { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .topo__mode {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   padding: 10px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text-muted);
-  font: inherit;
-  cursor: pointer;
-  text-align: left;
-  min-height: 44px;
+  border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text-muted);
+  font: inherit; text-align: left; cursor: pointer; min-height: 44px;
   transition: border-color 0.15s, background-color 0.15s;
 
   &:hover { border-color: var(--border-strong); }
   &:focus-visible { outline: 2px solid var(--route-public); outline-offset: 2px; }
-
   &--on {
     border-color: var(--route-public);
     background: color-mix(in srgb, var(--route-public) 8%, var(--surface));
@@ -45,143 +35,98 @@
     background: color-mix(in srgb, var(--route-private) 8%, var(--surface));
   }
 }
-
 .topo__mode-label { font-weight: 600; font-size: 14px; }
 .topo__mode-hint  { font-size: 12px; color: var(--text-dim); }
 
-// ── SVG map ───────────────────────────────────────────────────────────────────
+.topo__expand {
+  align-self: center; min-height: 44px; padding: 8px 16px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--surface); color: var(--text);
+  font: inherit; font-weight: 600; cursor: pointer;
+  &:hover { border-color: var(--text); }
+  &:focus-visible { outline: 2px solid var(--route-public); outline-offset: 2px; }
+}
+
+// ── SVG ───────────────────────────────────────────────────────────────────────
 .topo__svg {
-  display: block;
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
+  display: block; width: 100%; height: auto;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
   background: var(--surface);
   user-select: none;
 
   text { font-family: var(--sans); fill: var(--text); dominant-baseline: central; }
   [role="button"] { cursor: pointer; outline: none; }
-  [role="button"]:focus-visible > rect { stroke: var(--route-public); stroke-width: 2.5; }
+  [role="button"]:focus-visible > rect { stroke: var(--route-public); stroke-width: 3; }
+
+  &--full { height: 100%; border: 0; border-radius: 0; touch-action: none; cursor: grab; &:active { cursor: grabbing; } }
 }
 
 .edge {
   path {
-    fill: none;
-    stroke: var(--route-public);
-    stroke-width: 3;
-    stroke-linejoin: round;
-    stroke-dasharray: 10 8;
-    opacity: 0.18;
-    transition: opacity 0.2s;
+    fill: none; stroke: var(--route-public); stroke-width: 3; stroke-linejoin: round;
+    stroke-dasharray: 10 8; opacity: 0.18; transition: opacity 0.2s;
   }
   &--private path { stroke: var(--route-private); }
+  &--tint path { stroke: var(--route-private); }
   &--on path { opacity: 1; animation: flow 1.2s linear infinite; }
 }
-// Shared edges (router → hosts) take the colour of the active mode.
-.edge--tint path { stroke: var(--route-private); }
-
-.edge__label {
-  font-size: 12px;
-  fill: var(--text-dim) !important;
-  opacity: 0.9;
-}
-
+.edge__label { font-size: 12px; fill: var(--text-dim) !important; }
 @keyframes flow { to { stroke-dashoffset: -18; } }
 
 .node {
-  rect { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5; transition: opacity 0.2s; }
+  rect { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5; }
   &--sel rect { stroke: var(--route-public); stroke-width: 2.5; }
   &--dim { opacity: 0.4; }
 }
 .node__label { font-size: 15px; font-weight: 600; text-anchor: middle; }
 
-.host {
-  transition: opacity 0.2s;
-  &--dim { opacity: 0.45; }
-}
+.host { transition: opacity 0.2s; &--dim { opacity: 0.55; } }
 .host__box { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5; }
-.host--active .host__box { stroke-width: 3; }
-.host__head { cursor: pointer; }
-.host__sum { font-size: 12px; fill: var(--text-dim) !important; }
 .host[data-env="prod"] .host__box { stroke: var(--green); }
 .host[data-env="qa"]   .host__box { stroke: var(--yellow); }
 .host[data-env="dev"]  .host__box { stroke: var(--orange); }
-.host__name { font-size: 17px; font-weight: 700; font-family: var(--mono) !important; }
-.host__env  { font-size: 12px; text-anchor: end; text-transform: uppercase; letter-spacing: 0.08em; fill: var(--text-dim) !important; }
-.group__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; fill: var(--text-dim) !important; }
+.host__hit { fill: transparent; stroke: none; }
+.host__name { font-size: 18px; font-weight: 700; font-family: var(--mono) !important; }
+.host__env  { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; fill: var(--text-dim) !important; }
+.host__sum  { font-size: 12px; text-anchor: end; fill: var(--text-dim) !important; }
+.section__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; fill: var(--text-dim) !important; }
 
-.chip {
-  rect { fill: var(--surface); stroke: var(--border); stroke-width: 1; transition: stroke 0.15s, fill 0.15s; }
-  &:hover rect { stroke: var(--border-strong); }
-  &--lit rect { stroke: var(--route-public); stroke-width: 1.8; fill: color-mix(in srgb, var(--route-public) 9%, var(--surface)); }
-  &--lit.chip--private rect { stroke: var(--route-private); fill: color-mix(in srgb, var(--route-private) 9%, var(--surface)); }
-  &--sel rect { stroke-width: 2.8; }
+.vm__box { fill: color-mix(in srgb, var(--text) 3%, var(--surface-2)); stroke: var(--border-strong); stroke-dasharray: 6 4; }
+.vm--sel .vm__box { stroke: var(--text); stroke-dasharray: none; stroke-width: 2.5; }
+.vm__tile { fill: #fff; stroke: var(--border); }
+[data-theme="dark"] .vm__tile { fill: #f5f5f4; }
+.vm__title { font-size: 13px; font-weight: 600; }
 
-}
-.chip__label { font-size: 12.5px; }
-.chip:not(.chip--lit) .chip__label { fill: var(--text-muted); }
-
-.dot {
-  fill: var(--text-dim);
-  &--up   { fill: var(--green); }
-  &--down { fill: var(--red); }
-}
-
-// ── Mobile ────────────────────────────────────────────────────────────────────
+// ── Mobile stepper ────────────────────────────────────────────────────────────
 .steps {
   display: none;
-  list-style: none;
-  margin: 0 0 18px;
-  padding: 0 0 0 18px;
+  list-style: none; margin: 0 0 18px; padding: 0 0 0 18px;
   border-left: 3px dashed var(--route-public);
   &--private { border-left-color: var(--route-private); }
   li { position: relative; padding: 4px 0; }
   li::before {
-    content: '';
-    position: absolute;
-    left: -25px; top: 50%;
-    width: 11px; height: 11px;
-    border-radius: 50%;
-    background: var(--surface);
-    border: 2px solid var(--route-public);
+    content: ''; position: absolute; left: -25px; top: 50%;
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--surface); border: 2px solid var(--route-public);
     transform: translateY(-50%);
   }
   &--private li::before { border-color: var(--route-private); }
 }
-
 .step {
-  display: flex; align-items: center; gap: 8px;
-  width: 100%; min-height: 44px;
-  padding: 8px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  color: var(--text);
-  font: inherit; font-weight: 500; text-align: left;
-}
-
-.steps .dot {
-  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
-  background: var(--text-dim);
-  &--up { background: var(--green); }
-  &--down { background: var(--red); }
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 44px;
+  padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font: inherit; font-weight: 500; text-align: left;
 }
 
 // ── Detail panel ──────────────────────────────────────────────────────────────
 .detail {
-  position: relative;
-  margin-top: 14px;
-  padding: 16px 44px 16px 18px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  background: var(--surface);
-  box-shadow: var(--shadow-md);
+  position: relative; margin-top: 14px; padding: 16px 44px 16px 18px;
+  border: 1px solid var(--border); border-radius: var(--radius-lg);
+  background: var(--surface); box-shadow: var(--shadow-md);
 }
 .detail__close {
-  position: absolute; top: 6px; right: 6px;
-  width: 44px; height: 44px;
-  border: 0; background: transparent; color: var(--text-muted);
-  font-size: 24px; cursor: pointer;
+  position: absolute; top: 6px; right: 6px; width: 44px; height: 44px;
+  border: 0; background: transparent; color: var(--text-muted); font-size: 24px; cursor: pointer;
 }
 .detail__title { font-size: 16px; margin-bottom: 4px; }
 .detail__desc  { color: var(--text-muted); font-size: 14px; }
@@ -193,16 +138,38 @@
   &--down { color: var(--red);   border-color: var(--red); }
 }
 
+// ── Fullscreen ────────────────────────────────────────────────────────────────
+.fs {
+  position: fixed; inset: 0; z-index: 1000;
+  display: flex; flex-direction: column;
+  background: var(--bg);
+}
+.fs__bar {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+  gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface);
+}
+.fs__tools { display: inline-flex; gap: 8px; }
+.fs__tools button {
+  min-width: 44px; min-height: 44px; padding: 0 12px;
+  border: 1px solid var(--border-strong); border-radius: var(--radius);
+  background: var(--surface); color: var(--text); font: inherit; font-size: 16px; font-weight: 600; cursor: pointer;
+  &:hover { border-color: var(--text); }
+  &:focus-visible { outline: 2px solid var(--route-public); outline-offset: 2px; }
+}
+.fs__hint { font-size: 12px; color: var(--text-dim); padding: 6px 14px; background: var(--surface); border-bottom: 1px solid var(--border); }
+.fs__stage { flex: 1; min-height: 0; }
+.fs .detail {
+  position: absolute; left: 14px; right: 14px; bottom: 14px; margin: 0; max-width: 520px; z-index: 2;
+}
+
+// ── Responsive ────────────────────────────────────────────────────────────────
 @media (max-width: 860px) {
-  .topo__svg { display: none; }
+  .topo__inline { display: none; }
   .steps { display: block; }
-  .detail {
-    position: fixed;
-    left: 12px; right: 12px; bottom: 12px;
-    z-index: 20;
-    margin: 0;
-    max-height: 50vh; overflow: auto;
-  }
+  .topo__bar { flex-direction: column; }
+  .topo__expand { align-self: stretch; }
+  .detail { position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 20; margin: 0; max-height: 50vh; overflow: auto; }
+  .fs .detail { max-width: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
