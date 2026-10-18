@@ -78,8 +78,9 @@ Routes are declared in `TomasBFerreira/traefik-gitops`. This repo does not manag
 
 | Env | Hostname |
 |-----|---------|
-| dev | `databaes-landing-page-dev.databaes.net` |
-| prod | `databaes-landing-page.databaes.net` |
+| dev | `dev.databaes.net` (Tailscale-only; verify over Tailscale, the public dev tunnel serves a stale Traefik) |
+| qa | `databaes-landing-page-qa.databaes.net` (Tailscale-only) |
+| prod | `databaes.net` |
 
 ---
 
