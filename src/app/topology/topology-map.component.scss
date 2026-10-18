@@ -1,0 +1,245 @@
+:host {
+  --route-public: #2563eb;
+  --route-private: var(--orange);
+  display: block;
+}
+
+[data-theme="dark"] :host { --route-public: #60a5fa; }
+
+.topo { position: relative; }
+
+// ── Mode toggle ───────────────────────────────────────────────────────────────
+.topo__controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.topo__mode {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+  min-height: 44px;
+  transition: border-color 0.15s, background-color 0.15s;
+
+  &:hover { border-color: var(--border-strong); }
+  &:focus-visible { outline: 2px solid var(--route-public); outline-offset: 2px; }
+
+  &--on {
+    border-color: var(--route-public);
+    background: color-mix(in srgb, var(--route-public) 8%, var(--surface));
+    color: var(--text);
+  }
+  &--private.topo__mode--on {
+    border-color: var(--route-private);
+    background: color-mix(in srgb, var(--route-private) 8%, var(--surface));
+  }
+}
+
+.topo__mode-label { font-weight: 600; font-size: 14px; }
+.topo__mode-hint  { font-size: 12px; color: var(--text-dim); }
+
+// ── SVG map ───────────────────────────────────────────────────────────────────
+.topo__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  user-select: none;
+
+  text { font-family: var(--sans); fill: var(--text); dominant-baseline: central; }
+  [role="button"] { cursor: pointer; outline: none; }
+  [role="button"]:focus-visible > rect { stroke: var(--route-public); stroke-width: 2.5; }
+}
+
+.edge {
+  path {
+    fill: none;
+    stroke: var(--route-public);
+    stroke-width: 3;
+    stroke-linejoin: round;
+    stroke-dasharray: 10 8;
+    opacity: 0.18;
+    transition: opacity 0.2s;
+  }
+  &--private path { stroke: var(--route-private); }
+  &--on path { opacity: 1; animation: flow 1.2s linear infinite; }
+}
+// Shared edges (router → hosts) take the colour of the active mode.
+.edge--tint path { stroke: var(--route-private); }
+
+.edge__label {
+  font-size: 12px;
+  fill: var(--text-dim) !important;
+  opacity: 0.9;
+}
+
+@keyframes flow { to { stroke-dashoffset: -18; } }
+
+.node {
+  rect { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5; transition: opacity 0.2s; }
+  &--sel rect { stroke: var(--route-public); stroke-width: 2.5; }
+  &--dim { opacity: 0.4; }
+}
+.node__label { font-size: 15px; font-weight: 600; text-anchor: middle; }
+
+.host {
+  transition: opacity 0.2s;
+  &--dim { opacity: 0.45; }
+}
+.host__box { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5; }
+.host[data-env="prod"] .host__box { stroke: var(--green); }
+.host[data-env="qa"]   .host__box { stroke: var(--yellow); }
+.host[data-env="dev"]  .host__box { stroke: var(--orange); }
+.host__name { font-size: 17px; font-weight: 700; font-family: var(--mono) !important; }
+.host__env  { font-size: 12px; text-anchor: end; text-transform: uppercase; letter-spacing: 0.08em; fill: var(--text-dim) !important; }
+.group__label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; fill: var(--text-dim) !important; }
+
+.chip {
+  rect { fill: var(--surface); stroke: var(--border); stroke-width: 1; transition: stroke 0.15s, fill 0.15s; }
+  &:hover rect { stroke: var(--border-strong); }
+  &--lit rect { stroke: var(--route-public); stroke-width: 1.8; fill: color-mix(in srgb, var(--route-public) 9%, var(--surface)); }
+  &--lit.chip--private rect { stroke: var(--route-private); fill: color-mix(in srgb, var(--route-private) 9%, var(--surface)); }
+  &--sel rect { stroke-width: 2.8; }
+
+}
+.chip__label { font-size: 12.5px; }
+.chip:not(.chip--lit) .chip__label { fill: var(--text-muted); }
+
+.dot {
+  fill: var(--text-dim);
+  &--up   { fill: var(--green); }
+  &--down { fill: var(--red); }
+}
+
+// ── Mobile ────────────────────────────────────────────────────────────────────
+.topo__mobile { display: none; }
+
+.steps {
+  list-style: none;
+  margin: 0 0 18px;
+  padding: 0 0 0 18px;
+  border-left: 3px dashed var(--route-public);
+  &--private { border-left-color: var(--route-private); }
+  li { position: relative; padding: 4px 0; }
+  li::before {
+    content: '';
+    position: absolute;
+    left: -25px; top: 50%;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--route-public);
+    transform: translateY(-50%);
+  }
+  &--private li::before { border-color: var(--route-private); }
+}
+
+.step {
+  display: flex; align-items: center; gap: 8px;
+  width: 100%; min-height: 44px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit; font-weight: 500; text-align: left;
+}
+
+.acc {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  margin-bottom: 10px;
+  padding: 0 14px;
+  &--dim { opacity: 0.7; }
+
+  summary {
+    display: flex; align-items: center; gap: 10px;
+    min-height: 48px; cursor: pointer;
+    list-style: none;
+    &::-webkit-details-marker { display: none; }
+  }
+  &[open] summary { border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+}
+.acc__name  { font-family: var(--mono); font-weight: 700; }
+.acc__env   { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
+.acc__env[data-env="prod"] { color: var(--green); }
+.acc__env[data-env="qa"]   { color: var(--yellow); }
+.acc__env[data-env="dev"]  { color: var(--orange); }
+.acc__count { margin-left: auto; font-size: 12px; color: var(--text-dim); }
+.acc__group { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin: 10px 0 6px; }
+.acc__chips { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 12px; }
+
+.mchip {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-2);
+  color: var(--text-muted);
+  font: inherit; font-size: 13px;
+  &--lit { color: var(--text); border-color: var(--route-public); }
+}
+
+.topo__mobile .dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-dim);
+  &--up { background: var(--green); }
+  &--down { background: var(--red); }
+}
+
+// ── Detail panel ──────────────────────────────────────────────────────────────
+.detail {
+  position: relative;
+  margin-top: 14px;
+  padding: 16px 44px 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-md);
+}
+.detail__close {
+  position: absolute; top: 6px; right: 6px;
+  width: 44px; height: 44px;
+  border: 0; background: transparent; color: var(--text-muted);
+  font-size: 24px; cursor: pointer;
+}
+.detail__title { font-size: 16px; margin-bottom: 4px; }
+.detail__desc  { color: var(--text-muted); font-size: 14px; }
+.detail__meta  { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
+.pill {
+  padding: 2px 9px; border-radius: 999px; font-size: 12px;
+  border: 1px solid var(--border); color: var(--text-muted);
+  &--up   { color: var(--green); border-color: var(--green); }
+  &--down { color: var(--red);   border-color: var(--red); }
+}
+
+@media (max-width: 860px) {
+  .topo__svg { display: none; }
+  .topo__mobile { display: block; }
+  .detail {
+    position: fixed;
+    left: 12px; right: 12px; bottom: 12px;
+    z-index: 20;
+    margin: 0;
+    max-height: 50vh; overflow: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .edge--on path { animation: none; }
+  * { transition: none !important; }
+}

@@ -1,0 +1,28 @@
+<p class="summary" role="status">
+  @if (summary().known === 0) {
+    Status unavailable right now.
+  } @else if (summary().down === 0) {
+    <span class="dot dot--up" aria-hidden="true"></span> All {{ summary().known }} monitored services are up.
+  } @else {
+    <span class="dot dot--down" aria-hidden="true"></span> {{ summary().up }} of {{ summary().known }} monitored services are up.
+  }
+</p>
+
+@for (g of groups(); track g.label) {
+  <section class="group">
+    <h3 class="group__label">{{ g.label }}</h3>
+    <ul class="group__list">
+      @for (s of g.items; track s.service.id) {
+        <li>
+          <a class="tile" [href]="s.service.url" target="_blank" rel="noopener"
+             [attr.title]="s.service.description" [attr.aria-label]="s.service.name + ', ' + s.status">
+            <span class="dot" aria-hidden="true"
+                  [class.dot--up]="s.status === 'up'" [class.dot--down]="s.status === 'down'"></span>
+            <span class="tile__name">{{ s.service.name }}</span>
+            <span class="tile__arrow" aria-hidden="true">↗</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+}

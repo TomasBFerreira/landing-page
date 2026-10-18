@@ -160,3 +160,21 @@
 @media (max-width: 560px) {
   .header__status-pill { display: none; }
 }
+
+// Narrow screens: brand + actions on the first row, nav scrolls on its own row.
+@media (max-width: 720px) {
+  .header__inner {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 8px 16px;
+    row-gap: 2px;
+  }
+  .header__nav {
+    order: 3;
+    width: 100%;
+    margin-left: -11px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .header__status-text { display: none; }
+}
