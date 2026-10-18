@@ -1,31 +1,31 @@
 import { Component, HostListener, computed, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { HealthCheckService } from '../health-check.service';
-import { SERVICES } from '../services.config';
+import { TopologyLookupService } from './topology-lookup.service';
+import { TopologyInspectorComponent } from './topology-inspector.component';
 import { ServiceStatus } from '../models/service.model';
 import {
   CHIP_GAP, CHIP_H, CHIP_W, EDGES, GROUP_LABEL_H, GROUP_PAD, GROUP_ORDER, HOSTS, HOST_H, HOST_HEAD_H, HOST_W,
-  NODES, STEPS, VIEW,
-  ChipGroup, PathKind, TopoChip, TopoEdge, TopoHost, TopoItem,
+  NODES, STEPS, STEP_ITEMS, VIEW,
+  ChipGroup, Linkable, PathKind, TopoChip, TopoEdge, TopoHost, TopoItem,
 } from './topology.data';
+import { INVENTORY, inventoryCounts } from './inventory.data';
 
-const GROUP_LABEL: Record<ChipGroup, string> = { network: 'Network', platform: 'Platform', workloads: 'Workloads' };
+const GROUP_LABEL: Record<ChipGroup, string> = { network: 'Network plane' };
 
 interface Rect { x: number; y: number; w: number; h: number; }
 interface ChipView { chip: TopoChip; rect: Rect; }
 interface GroupView { label: string; x: number; y: number; chips: ChipView[]; }
-interface HostView { host: TopoHost; rect: Rect; groups: GroupView[]; }
+interface HostView { host: TopoHost; rect: Rect; groups: GroupView[]; summary: string; sumY: number; }
 interface EdgeView { edge: TopoEdge; d: string; lx: number; ly: number; }
 
 /**
- * Interactive topology map. One data file (topology.data.ts) drives two layouts:
- * an SVG on wide screens and a stepper + accordions on narrow ones. CSS picks
- * which is visible, so there are no resize listeners.
+ * Interactive topology map. topology.data.ts drives the map (SVG on wide
+ * screens, a stepper on narrow ones); inventory.data.ts drives the inspector
+ * that lists what runs inside each Proxmox host.
  */
 @Component({
   selector: 'app-topology-map',
   standalone: true,
-  imports: [CommonModule],
+  imports: [TopologyInspectorComponent],
   templateUrl: './topology-map.component.html',
   styleUrl: './topology-map.component.scss',
 })
@@ -39,12 +39,14 @@ export class TopologyMapComponent {
 
   readonly mode = signal<PathKind>('public');
   readonly selectedId = signal<string | null>(null);
+  readonly inspectId = signal<string>('betsy');
 
   readonly hostViews: HostView[] = HOSTS.map(h => this.layoutHost(h));
   readonly edgeViews: EdgeView[] = EDGES.map(e => this.layoutEdge(e));
 
   private readonly itemsById = new Map<string, TopoItem>([
     ...NODES.map(n => [n.id, n] as [string, TopoItem]),
+    ...STEP_ITEMS.map(i => [i.id, i] as [string, TopoItem]),
     ...HOSTS.flatMap(h => [
       [h.id, { id: h.id, label: h.name, desc: h.desc, paths: h.paths } as TopoItem] as [string, TopoItem],
       ...h.chips.map(c => [c.id, c] as [string, TopoItem]),
@@ -59,31 +61,27 @@ export class TopologyMapComponent {
   readonly steps = computed(() =>
     STEPS[this.mode()].map(id => this.itemsById.get(id)).filter((i): i is TopoItem => !!i));
 
-  constructor(private health: HealthCheckService) {}
+  constructor(private lookup: TopologyLookupService) {}
 
   setMode(m: PathKind): void { this.mode.set(m); }
   select(id: string): void { this.selectedId.set(this.selectedId() === id ? null : id); }
   close(): void { this.selectedId.set(null); }
+  inspect(id: string): void { this.inspectId.set(id); }
+
+  /** Clicking a host box in the map opens it in the inspector below. */
+  inspectFromMap(id: string): void {
+    this.inspect(id);
+    document.getElementById('topo-inspector')?.scrollIntoView({
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+      block: 'start',
+    });
+  }
 
   lit(item: { paths: PathKind[] }): boolean { return item.paths.includes(this.mode()); }
   edgeLit(e: TopoEdge): boolean { return e.kind === 'shared' || e.kind === this.mode(); }
 
-  private readonly statusById = computed(() =>
-    new Map(this.health.states().map(s => [s.service.id, s.status] as [string, ServiceStatus])));
-
-  private readonly urlById = new Map(SERVICES.map(s => [s.id, s.url] as [string, string]));
-
-  statusFor(item: TopoItem): ServiceStatus | null {
-    if (!item.serviceId) return null;
-    return this.statusById().get(item.serviceId) ?? 'unknown';
-  }
-
-  urlFor(item: TopoItem): string | null {
-    return item.serviceId ? this.urlById.get(item.serviceId) ?? null : null;
-  }
-
-  @HostListener('document:keydown.escape')
-  onEscape(): void { if (this.selectedId()) this.close(); }
+  statusFor(item: Linkable): ServiceStatus | null { return this.lookup.statusFor(item); }
+  urlFor(item: Linkable): string | null { return this.lookup.urlFor(item); }
 
   accessLabel(item: TopoItem): string | null {
     switch (item.access) {
@@ -94,8 +92,8 @@ export class TopologyMapComponent {
     }
   }
 
-  /** Total chips on the host, shown in the mobile accordion header. */
-  chipCount(h: HostView): number { return h.host.chips.length; }
+  @HostListener('document:keydown.escape')
+  onEscape(): void { if (this.selectedId()) this.close(); }
 
   private layoutHost(host: TopoHost): HostView {
     const rect: Rect = { x: host.x, y: host.y, w: HOST_W, h: HOST_H };
@@ -117,7 +115,12 @@ export class TopologyMapComponent {
       cursor += Math.ceil(members.length / 2) * (CHIP_H + CHIP_GAP) + GROUP_PAD;
       groups.push({ label: GROUP_LABEL[g], x: host.x + 12, y: gy + 10, chips });
     }
-    return { host, rect, groups };
+    const c = inventoryCounts(INVENTORY[host.id]);
+    return {
+      host, rect, groups,
+      summary: `${c.lxcs} LXC · 1 VM · ${c.apps} apps`,
+      sumY: host.y + HOST_H - 18,
+    };
   }
 
   private rectOf(id: string): Rect {

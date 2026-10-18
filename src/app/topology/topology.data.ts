@@ -6,17 +6,18 @@
 
 export type PathKind = 'public' | 'private';
 export type Access = 'public' | 'sso' | 'private';
-export type ChipGroup = 'network' | 'platform' | 'workloads';
+export type ChipGroup = 'network';
 export type HostEnv = 'prod' | 'dev' | 'qa';
 
-export interface TopoItem {
+/** Optional live-status link: a SERVICES id; `noLink` keeps the status dot but hides the Open link. */
+export interface Linkable { serviceId?: string; noLink?: boolean; }
+
+export interface TopoItem extends Linkable {
   id: string;
   label: string;
   desc: string;
   /** Which traffic paths run through this item; items on neither stay in the background. */
   paths: PathKind[];
-  /** Matches a SERVICES id to show a live status dot and an open link. */
-  serviceId?: string;
   access?: Access;
 }
 
@@ -48,9 +49,9 @@ export interface TopoEdge {
   route?: 'down' | 'left';
 }
 
-export const VIEW = { w: 1000, h: 865 };
+export const VIEW = { w: 1000, h: 650 };
 export const HOST_W = 300;
-export const HOST_H = 395;
+export const HOST_H = 190;
 
 // Host-box layout constants. The component lays chips out with these and the
 // spec checks the same numbers, so they can't drift apart.
@@ -60,11 +61,13 @@ export const CHIP_GAP = 8;
 export const GROUP_LABEL_H = 18;
 export const GROUP_PAD = 6;
 export const HOST_HEAD_H = 44;
-export const GROUP_ORDER: ChipGroup[] = ['network', 'platform', 'workloads'];
+/** Room under the chips for the "N LXC · 1 VM · N apps" summary line. */
+export const HOST_FOOT_H = 28;
+export const GROUP_ORDER: ChipGroup[] = ['network'];
 
 /** Vertical space a host's chips need, in the same units as HOST_H. */
 export function hostContentHeight(chips: TopoChip[]): number {
-  let h = HOST_HEAD_H;
+  let h = HOST_HEAD_H + HOST_FOOT_H;
   for (const g of GROUP_ORDER) {
     const n = chips.filter(c => c.group === g).length;
     if (!n) continue;
@@ -94,7 +97,7 @@ const net = (env: HostEnv): TopoChip[] => {
       desc: prod
         ? 'Holds the outbound Cloudflare Tunnel and hands requests to Traefik.'
         : 'Tunnel daemon for this environment. The public tunnel is opt-in for dev and QA and is off by default.' },
-    { id: `${env}-traefik`, group: 'network', label: 'Traefik', serviceId: prod ? 'traefik' : undefined,
+    { id: `${env}-traefik`, group: 'network', label: 'Traefik', serviceId: prod ? 'traefik' : undefined, noLink: true,
       paths: prod ? ['public', 'private'] : ['private'],
       desc: 'Reverse proxy. Routes by hostname to k3s NodePorts and LXC services, asking Authentik first for apps that need a sign-in. Config is GitOps-managed.' },
     { id: `${env}-adguard`, group: 'network', label: 'AdGuard', paths: ['private'],
@@ -104,67 +107,21 @@ const net = (env: HostEnv): TopoChip[] => {
   ];
 };
 
-const k3s = (env: HostEnv): TopoChip => ({
-  id: `${env}-k3s`, group: 'workloads', label: env === 'prod' ? 'k3s workloads' : 'k3s worker',
-  paths: env === 'prod' ? ['public', 'private'] : ['private'],
-  desc: env === 'prod'
-    ? 'The Kubernetes worker that runs the apps in the launcher below.'
-    : 'Kubernetes worker for pre-production builds of the same apps.',
-});
-
 export const HOSTS: TopoHost[] = [
   {
     id: 'betsy', name: 'betsy', env: 'prod', x: 10, y: 450, paths: ['public', 'private'],
     desc: 'Proxmox host for production. The only environment reachable from the public internet.',
-    chips: [
-      ...net('prod'),
-      { id: 'prod-vault', group: 'platform', label: 'Vault', serviceId: 'vault-prod', access: 'sso', paths: [],
-        desc: 'Secrets for everything in production.' },
-      { id: 'prod-authentik', group: 'platform', label: 'Authentik', serviceId: 'authentik', paths: ['public', 'private'],
-        desc: 'SSO. Traefik asks it before letting a request through to a gated app; some apps are public and skip it.' },
-      { id: 'prod-grafana', group: 'platform', label: 'Grafana', serviceId: 'grafana', access: 'sso', paths: [],
-        desc: 'Metrics, logs and the probes that drive the status dots on this page.' },
-      { id: 'prod-semaphore', group: 'platform', label: 'Semaphore', serviceId: 'semaphore', access: 'sso', paths: [],
-        desc: 'Ansible runner.' },
-      { id: 'prod-rancher', group: 'platform', label: 'Rancher', serviceId: 'rancher', access: 'sso', paths: [],
-        desc: 'Kubernetes management.' },
-      { id: 'prod-backups', group: 'platform', label: 'Backups (PBS)', paths: [],
-        desc: 'Proxmox Backup Server. Every container and VM is backed up nightly.' },
-      k3s('prod'),
-      { id: 'prod-minecraft', group: 'workloads', label: 'Minecraft', access: 'private', paths: ['private'],
-        desc: 'Private Java Edition server. Tailnet-only: no public route and no hostname.' },
-      { id: 'prod-torrent', group: 'workloads', label: 'Torrent', paths: [],
-        desc: 'Download client behind the media apps.' },
-      { id: 'prod-zigbee', group: 'workloads', label: 'Zigbee', paths: [],
-        desc: 'Power monitoring over a Zigbee dongle.' },
-    ],
+    chips: net('prod'),
   },
   {
     id: 'benedict', name: 'benedict', env: 'dev', x: 350, y: 450, paths: ['private'],
     desc: 'Proxmox host for development. Reached over Tailscale; its public tunnel is opt-in.',
-    chips: [
-      ...net('dev'),
-      { id: 'dev-vault', group: 'platform', label: 'Vault', paths: [], desc: 'Dev secrets.' },
-      { id: 'dev-bootstrap', group: 'platform', label: 'Bootstrap vault', paths: [],
-        desc: 'The stable root vault that the other environments depend on.' },
-      { id: 'dev-sso', group: 'platform', label: 'Authentik', paths: ['private'], desc: 'Dev SSO.' },
-      { id: 'dev-grafana', group: 'platform', label: 'Monitoring', paths: [], desc: 'Dev metrics and logs.' },
-      { id: 'dev-semaphore', group: 'platform', label: 'Semaphore', paths: [], desc: 'Ansible runner.' },
-      { id: 'dev-runner', group: 'platform', label: 'CI runner', paths: [], desc: 'GitHub Actions runner for dev deploys.' },
-      k3s('dev'),
-    ],
+    chips: net('dev'),
   },
   {
     id: 'heaton', name: 'heaton', env: 'qa', x: 690, y: 450, paths: ['private'],
     desc: 'Proxmox host for QA. Tailscale only.',
-    chips: [
-      ...net('qa'),
-      { id: 'qa-vault', group: 'platform', label: 'Vault', paths: [], desc: 'QA secrets.' },
-      { id: 'qa-sso', group: 'platform', label: 'Authentik', paths: ['private'], desc: 'QA SSO.' },
-      { id: 'qa-grafana', group: 'platform', label: 'Monitoring', paths: [], desc: 'QA metrics and logs.' },
-      { id: 'qa-runner', group: 'platform', label: 'CI runner', paths: [], desc: 'GitHub Actions runner for QA deploys.' },
-      k3s('qa'),
-    ],
+    chips: net('qa'),
   },
 ];
 
@@ -183,3 +140,9 @@ export const STEPS: Record<PathKind, string[]> = {
   public: ['internet', 'cloudflare', 'isp', 'router', 'prod-cloudflared', 'prod-traefik', 'prod-k3s'],
   private: ['tailnet', 'router', 'prod-adguard', 'prod-gateway', 'prod-traefik', 'prod-k3s'],
 };
+
+/** Steps in the mobile stepper that aren't chips in the host boxes. */
+export const STEP_ITEMS: TopoItem[] = [
+  { id: 'prod-k3s', label: 'Apps on k3s', paths: ['public', 'private'],
+    desc: 'The Kubernetes worker VM that runs the apps. Open the betsy inspector below to see each one.' },
+];

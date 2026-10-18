@@ -1,4 +1,4 @@
-import { EDGES, HOSTS, NODES, STEPS, HOST_H, hostContentHeight } from './topology.data';
+import { EDGES, HOSTS, NODES, STEPS, STEP_ITEMS, HOST_H, hostContentHeight } from './topology.data';
 import { SERVICES } from '../services.config';
 
 describe('topology data', () => {
@@ -20,8 +20,9 @@ describe('topology data', () => {
   });
 
   it('only references known ids in the mobile steps', () => {
+    const known = [...ids, ...STEP_ITEMS.map(i => i.id)];
     for (const id of [...STEPS.public, ...STEPS.private]) {
-      expect(ids).withContext(id).toContain(id);
+      expect(known).withContext(id).toContain(id);
     }
   });
 

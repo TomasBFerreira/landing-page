@@ -34,12 +34,14 @@
     }
 
     @for (hv of hostViews; track hv.host.id) {
-      <g class="host" [class.host--dim]="!lit(hv.host)" [attr.data-env]="hv.host.env">
+      <g class="host" [class.host--dim]="!lit(hv.host)" [class.host--active]="inspectId() === hv.host.id"
+         [attr.data-env]="hv.host.env">
         <rect class="host__box" [attr.x]="hv.rect.x" [attr.y]="hv.rect.y"
               [attr.width]="hv.rect.w" [attr.height]="hv.rect.h" rx="16" />
-        <g class="host__head" role="button" tabindex="0" [attr.aria-label]="hv.host.name + ' (' + hv.host.env + ')'"
-           (click)="select(hv.host.id)" (keydown.enter)="select(hv.host.id)"
-           (keydown.space)="select(hv.host.id); $event.preventDefault()">
+        <g class="host__head" role="button" tabindex="0"
+           [attr.aria-label]="'Inspect ' + hv.host.name + ' (' + hv.host.env + ')'"
+           (click)="inspectFromMap(hv.host.id)" (keydown.enter)="inspectFromMap(hv.host.id)"
+           (keydown.space)="inspectFromMap(hv.host.id); $event.preventDefault()">
           <text [attr.x]="hv.rect.x + 16" [attr.y]="hv.rect.y + 28" class="host__name">{{ hv.host.name }}</text>
           <text [attr.x]="hv.rect.x + hv.rect.w - 16" [attr.y]="hv.rect.y + 28" class="host__env">{{ hv.host.env }}</text>
         </g>
@@ -60,48 +62,24 @@
             </g>
           }
         }
+        <text class="host__sum" [attr.x]="hv.rect.x + 16" [attr.y]="hv.sumY">{{ hv.summary }}</text>
       </g>
     }
   </svg>
 
-  <!-- Narrow screens: the same data as a stepper + accordions -->
-  <div class="topo__mobile">
-    <ol class="steps" [class.steps--private]="mode() === 'private'">
-      @for (s of steps(); track s.id) {
-        <li>
-          <button type="button" class="step" (click)="select(s.id)">
-            <span class="step__label">{{ s.label }}</span>
-            @if (statusFor(s); as st) {
-              <span class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'"></span>
-            }
-          </button>
-        </li>
-      }
-    </ol>
-
-    @for (hv of hostViews; track hv.host.id) {
-      <details class="acc" [class.acc--dim]="!lit(hv.host)">
-        <summary>
-          <span class="acc__name">{{ hv.host.name }}</span>
-          <span class="acc__env" [attr.data-env]="hv.host.env">{{ hv.host.env }}</span>
-          <span class="acc__count">{{ chipCount(hv) }}</span>
-        </summary>
-        @for (g of hv.groups; track g.label) {
-          <p class="acc__group">{{ g.label }}</p>
-          <div class="acc__chips">
-            @for (cv of g.chips; track cv.chip.id) {
-              <button type="button" class="mchip" [class.mchip--lit]="lit(cv.chip)" (click)="select(cv.chip.id)">
-                {{ cv.chip.label }}
-                @if (statusFor(cv.chip); as st) {
-                  <span class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'"></span>
-                }
-              </button>
-            }
-          </div>
-        }
-      </details>
+  <!-- Narrow screens: the path as a stepper -->
+  <ol class="steps" [class.steps--private]="mode() === 'private'">
+    @for (s of steps(); track s.id) {
+      <li>
+        <button type="button" class="step" (click)="select(s.id)">
+          <span class="step__label">{{ s.label }}</span>
+          @if (statusFor(s); as st) {
+            <span class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'"></span>
+          }
+        </button>
+      </li>
     }
-  </div>
+  </ol>
 
   @if (selected(); as s) {
     <aside class="detail" role="region" aria-live="polite" [attr.aria-label]="s.label">
@@ -115,4 +93,6 @@
       </p>
     </aside>
   }
+
+  <app-topology-inspector [mode]="mode()" [hostId]="inspectId()" (hostChange)="inspect($event)" />
 </div>
