@@ -1,0 +1,80 @@
+<section class="insp" id="topo-inspector" aria-label="What runs on each host">
+  <div class="insp__tabs" role="group" aria-label="Host">
+    @for (h of hosts; track h.id) {
+      <button type="button" class="insp__tab" [class.insp__tab--on]="hostId() === h.id"
+              [attr.data-env]="h.env" [attr.aria-pressed]="hostId() === h.id"
+              (click)="hostChange.emit(h.id)">
+        {{ h.name }} <span class="insp__env">{{ h.env }}</span>
+      </button>
+    }
+  </div>
+
+  @let cur = current();
+  <p class="insp__lead">{{ cur.host.desc }}</p>
+
+  <details class="sec" [open]="startOpen">
+  <summary class="insp__h">LXC containers <span class="insp__n">{{ cur.counts.lxcs }} running</span></summary>
+  <div class="insp__grid">
+    @for (c of cur.inv.lxcs; track c.name) {
+      <article class="card" [attr.data-state]="cardState(c.paths)" [class.card--off]="c.state === 'stopped'">
+        <header class="card__head">
+          <img class="ic" [src]="iconUrl(c.icon)" alt="" width="28" height="28" loading="lazy" />
+          <h4 class="card__name">{{ c.name }}</h4>
+          @if (c.state === 'stopped') { <span class="pill">stopped</span> }
+          @else {
+            @if (statusFor(c); as st) { <span class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'"></span> }
+          }
+        </header>
+        <p class="card__desc">{{ c.desc }}</p>
+        <ul class="svc">
+          @for (sv of c.services; track sv.label) {
+            <li>
+              @if (sv.icon) { <img class="ic ic--sm" [src]="iconUrl(sv.icon)" alt="" width="16" height="16" loading="lazy" /> }
+              {{ sv.label }}
+            </li>
+          }
+        </ul>
+        @if (urlFor(c); as u) { <a class="card__open" [href]="u" target="_blank" rel="noopener">Open ↗</a> }
+      </article>
+    }
+  </div>
+  </details>
+
+  <details class="sec" [open]="startOpen">
+  <summary class="insp__h">Virtual machine <span class="insp__n">{{ cur.inv.vm.name }}</span></summary>
+  <div class="vm">
+    <div class="vm__head">
+      <span class="vm__icons">
+        @for (i of cur.inv.vm.icons; track i) { <img class="ic" [src]="iconUrl(i)" alt="" width="28" height="28" loading="lazy" /> }
+      </span>
+      <p class="vm__desc">{{ cur.inv.vm.desc }}</p>
+    </div>
+    <div class="insp__grid">
+      @for (a of cur.inv.vm.apps; track a.name) {
+        <article class="card" [attr.data-state]="cardState(a.paths)">
+          <header class="card__head">
+            @if (a.icon) { <img class="ic" [src]="iconUrl(a.icon)" alt="" width="28" height="28" loading="lazy" /> }
+            @else { <span class="ic ic--letter" aria-hidden="true">{{ initial(a.name) }}</span> }
+            <h4 class="card__name">{{ a.name }}</h4>
+            @if (statusFor(a); as st) { <span class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'"></span> }
+          </header>
+          <p class="card__desc">{{ a.desc }}</p>
+          <ul class="svc">
+            @for (w of a.workloads; track w.label) {
+              <li>
+                @if (w.icon) { <img class="ic ic--sm" [src]="iconUrl(w.icon)" alt="" width="16" height="16" loading="lazy" /> }
+                {{ w.label }}
+              </li>
+            }
+          </ul>
+          <p class="card__foot">
+            @if (a.access === 'sso') { <span class="pill">Sign-in required</span> }
+            @if (a.access === 'private') { <span class="pill">Tailscale only</span> }
+            @if (urlFor(a); as u) { <a class="card__open" [href]="u" target="_blank" rel="noopener">Open ↗</a> }
+          </p>
+        </article>
+      }
+    </div>
+  </div>
+  </details>
+</section>

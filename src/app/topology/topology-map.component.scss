@@ -100,6 +100,9 @@
   &--dim { opacity: 0.45; }
 }
 .host__box { fill: var(--surface-2); stroke: var(--border-strong); stroke-width: 1.5; }
+.host--active .host__box { stroke-width: 3; }
+.host__head { cursor: pointer; }
+.host__sum { font-size: 12px; fill: var(--text-dim) !important; }
 .host[data-env="prod"] .host__box { stroke: var(--green); }
 .host[data-env="qa"]   .host__box { stroke: var(--yellow); }
 .host[data-env="dev"]  .host__box { stroke: var(--orange); }
@@ -125,9 +128,8 @@
 }
 
 // ── Mobile ────────────────────────────────────────────────────────────────────
-.topo__mobile { display: none; }
-
 .steps {
+  display: none;
   list-style: none;
   margin: 0 0 18px;
   padding: 0 0 0 18px;
@@ -158,43 +160,7 @@
   font: inherit; font-weight: 500; text-align: left;
 }
 
-.acc {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--surface);
-  margin-bottom: 10px;
-  padding: 0 14px;
-  &--dim { opacity: 0.7; }
-
-  summary {
-    display: flex; align-items: center; gap: 10px;
-    min-height: 48px; cursor: pointer;
-    list-style: none;
-    &::-webkit-details-marker { display: none; }
-  }
-  &[open] summary { border-bottom: 1px solid var(--border); margin-bottom: 8px; }
-}
-.acc__name  { font-family: var(--mono); font-weight: 700; }
-.acc__env   { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); }
-.acc__env[data-env="prod"] { color: var(--green); }
-.acc__env[data-env="qa"]   { color: var(--yellow); }
-.acc__env[data-env="dev"]  { color: var(--orange); }
-.acc__count { margin-left: auto; font-size: 12px; color: var(--text-dim); }
-.acc__group { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-dim); margin: 10px 0 6px; }
-.acc__chips { display: flex; flex-wrap: wrap; gap: 8px; padding-bottom: 12px; }
-
-.mchip {
-  display: inline-flex; align-items: center; gap: 6px;
-  min-height: 40px; padding: 6px 12px;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface-2);
-  color: var(--text-muted);
-  font: inherit; font-size: 13px;
-  &--lit { color: var(--text); border-color: var(--route-public); }
-}
-
-.topo__mobile .dot {
+.steps .dot {
   display: inline-block; width: 8px; height: 8px; border-radius: 50%;
   background: var(--text-dim);
   &--up { background: var(--green); }
@@ -229,7 +195,7 @@
 
 @media (max-width: 860px) {
   .topo__svg { display: none; }
-  .topo__mobile { display: block; }
+  .steps { display: block; }
   .detail {
     position: fixed;
     left: 12px; right: 12px; bottom: 12px;
