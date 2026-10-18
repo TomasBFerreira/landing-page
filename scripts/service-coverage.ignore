@@ -10,7 +10,7 @@ stremiotest.databaes.net      # test route
 signoz.databaes.net           # SigNoz, stopped (benedict over-commit, 2026-06-10)
 tomajflix.databaes.net        # alias of tomajflix.app
 
-# TODO: live services missing from the landing page; remove each line when the
+# TODO(landing redesign): live services missing from the landing page; remove each line when the
 # topology redesign adds its tile.
 wedding.databaes.net          # TODO live 2026-10-12
 mcc.databaes.net              # TODO My Chess Coach

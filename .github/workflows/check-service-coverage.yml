@@ -15,10 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Fetch traefik-gitops services.yml
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
+          set -euo pipefail
           gh api repos/TomasBFerreira/traefik-gitops/contents/config/dynamic/services.yml \
             -H "Accept: application/vnd.github.raw" > "$RUNNER_TEMP/services.yml"
 

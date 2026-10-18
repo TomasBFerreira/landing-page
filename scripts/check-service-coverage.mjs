@@ -17,11 +17,21 @@ if (!routesFile) {
 }
 
 // Prod hostnames only: dev/qa are Tailscale-only and never landing-page surfaces.
+// Strip YAML comments first so commented-out routes aren't counted.
+const routesText = readFileSync(routesFile, 'utf8').replace(/^\s*#.*$/gm, '');
+if (/HostRegexp\(/.test(routesText)) {
+  console.warn('::warning::HostRegexp rules are not inspected by this check');
+}
 const routed = new Set(
-  [...readFileSync(routesFile, 'utf8').matchAll(/Host\(`([^`]+)`\)/g)]
+  [...routesText.matchAll(/Host\(`([^`]+)`\)/g)]
     .map(m => m[1].toLowerCase())
     .filter(h => !/-(dev|qa)\./.test(h) && !/^(dev|qa)\./.test(h)),
 );
+
+if (routed.size === 0) {
+  console.error(`no Host() rules found in ${routesFile}; refusing to pass on empty input`);
+  process.exit(2);
+}
 
 const listed = new Set(
   [...readFileSync(join(root, 'src/app/services.config.ts'), 'utf8').matchAll(/url:\s*'https?:\/\/([^/']+)/g)]
@@ -32,7 +42,7 @@ const ignored = new Map();
 for (const raw of readFileSync(join(root, 'scripts/service-coverage.ignore'), 'utf8').split('\n')) {
   const line = raw.trim();
   if (!line || line.startsWith('#')) continue;
-  const [host, ...why] = line.split(/\s+#\s*/);
+  const [host, ...why] = line.split(/\s*#\s*/);
   if (!why.length) {
     console.error(`ignore entry needs a "# reason": ${line}`);
     process.exit(2);
