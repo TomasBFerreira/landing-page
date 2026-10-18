@@ -1,17 +1,17 @@
-import { Access, PathKind } from './topology.data';
+import { Access, Linkable, PathKind } from './topology.data';
 
 /**
  * What actually runs inside each Proxmox host: LXC containers and their
- * services, then the k3s worker VM and its apps. Hand-maintained and verified
- * read-only against the hosts on 2026-10-18. Names are role names, not
+ * services, then the k3s worker VM and its apps. Hand-maintained. Betsy was
+ * checked container by container and workload by workload read-only on
+ * 2026-10-18; benedict and heaton were checked by container list and k3s
+ * namespace only. Names are role names, not
  * Proxmox names: no VMIDs, and no blue/green slot suffix.
  *
  * `icon` is a file under public/icons (without .svg).
  */
 
 export interface Svc { label: string; icon?: string; }
-
-interface Linkable { serviceId?: string; /** Show a status dot but no "Open" link. */ noLink?: boolean; }
 
 export interface LxcDef extends Linkable {
   name: string;
@@ -70,7 +70,7 @@ const L = {
     services: [{ label: 'Authentik server', icon: 'authentik' }, { label: 'Authentik worker', icon: 'authentik' }, pg, { label: 'Redis', icon: 'redis' }] }),
   vault: (serviceId?: string): LxcDef => ({
     name: 'vault', icon: 'vault', paths: [], serviceId,
-    desc: 'Secrets for this environment. Two slots, flipped blue/green on deploy.',
+    desc: 'Secrets for this environment.',
     services: [{ label: 'HashiCorp Vault', icon: 'vault' }] }),
   monitoring: (serviceId?: string): LxcDef => ({
     name: 'monitoring', icon: 'grafana', paths: [], serviceId,
@@ -187,7 +187,7 @@ export const INVENTORY: Record<string, HostInventory> = {
     lxcs: [
       L.cloudflared(), L.traefik(), L.adguard(), L.gateway(false), L.sso(), L.vault(), L.monitoring(), L.semaphore(),
       { name: 'bootstrap-vault', icon: 'vault', paths: [],
-        desc: 'The stable root vault the other environments depend on.', services: [{ label: 'HashiCorp Vault', icon: 'vault' }] },
+        desc: 'Root vault for the lab.', services: [{ label: 'HashiCorp Vault', icon: 'vault' }] },
       L.runner('Self-hosted runner for dev deploys.'),
       L.rancher(undefined, 'stopped'),
       { name: 'torrent', icon: 'qbittorrent', paths: [], state: 'stopped',

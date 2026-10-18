@@ -38,10 +38,10 @@
 .sec > summary:focus-visible { outline: 2px solid var(--lit); outline-offset: 2px; }
 
 .insp__h {
-  display: flex; align-items: baseline; gap: 10px;
+  display: flex; align-items: center; gap: 10px;
   font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;
-  color: var(--text-dim); margin: 22px 0 10px;
-  min-height: 44px; align-items: center; margin: 8px 0 0;
+  color: var(--text-dim);
+  min-height: 44px; margin: 8px 0 0;
 }
 .sec[open] > .insp__h { margin-bottom: 6px; }
 .insp__n { font-family: var(--mono); font-weight: 400; text-transform: none; letter-spacing: 0; }

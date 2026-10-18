@@ -36,7 +36,7 @@ describe('inventory data', () => {
   it('does not expose IPs, VMIDs or blue/green slot names', () => {
     const text = JSON.stringify(INVENTORY);
     expect(text).not.toMatch(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/);
-    expect(text).not.toMatch(/VMID|CT ?\d{3}|-blue|-green/i);
+    expect(text).not.toMatch(/VMID|CT ?\d{3}|blue.?green|\bslot/i);
   });
 
   it('counts only running containers', () => {

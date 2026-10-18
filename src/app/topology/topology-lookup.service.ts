@@ -2,8 +2,7 @@ import { Injectable, computed } from '@angular/core';
 import { HealthCheckService } from '../health-check.service';
 import { SERVICES } from '../services.config';
 import { ServiceStatus } from '../models/service.model';
-
-export interface Linkable { serviceId?: string; /** Keep the status dot but don't offer an "Open" link. */ noLink?: boolean; }
+import { Linkable } from './topology.data';
 
 /** Live status and link lookups shared by the map and the inspector. */
 @Injectable({ providedIn: 'root' })

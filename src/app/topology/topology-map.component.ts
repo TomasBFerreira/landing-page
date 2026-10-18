@@ -1,12 +1,11 @@
 import { Component, HostListener, computed, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { TopologyLookupService } from './topology-lookup.service';
 import { TopologyInspectorComponent } from './topology-inspector.component';
 import { ServiceStatus } from '../models/service.model';
 import {
   CHIP_GAP, CHIP_H, CHIP_W, EDGES, GROUP_LABEL_H, GROUP_PAD, GROUP_ORDER, HOSTS, HOST_H, HOST_HEAD_H, HOST_W,
   NODES, STEPS, STEP_ITEMS, VIEW,
-  ChipGroup, PathKind, TopoChip, TopoEdge, TopoHost, TopoItem,
+  ChipGroup, Linkable, PathKind, TopoChip, TopoEdge, TopoHost, TopoItem,
 } from './topology.data';
 import { INVENTORY, inventoryCounts } from './inventory.data';
 
@@ -26,7 +25,7 @@ interface EdgeView { edge: TopoEdge; d: string; lx: number; ly: number; }
 @Component({
   selector: 'app-topology-map',
   standalone: true,
-  imports: [CommonModule, TopologyInspectorComponent],
+  imports: [TopologyInspectorComponent],
   templateUrl: './topology-map.component.html',
   styleUrl: './topology-map.component.scss',
 })
@@ -81,8 +80,8 @@ export class TopologyMapComponent {
   lit(item: { paths: PathKind[] }): boolean { return item.paths.includes(this.mode()); }
   edgeLit(e: TopoEdge): boolean { return e.kind === 'shared' || e.kind === this.mode(); }
 
-  statusFor(item: { serviceId?: string; noLink?: boolean }): ServiceStatus | null { return this.lookup.statusFor(item); }
-  urlFor(item: { serviceId?: string; noLink?: boolean }): string | null { return this.lookup.urlFor(item); }
+  statusFor(item: Linkable): ServiceStatus | null { return this.lookup.statusFor(item); }
+  urlFor(item: Linkable): string | null { return this.lookup.urlFor(item); }
 
   accessLabel(item: TopoItem): string | null {
     switch (item.access) {

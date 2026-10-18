@@ -90,7 +90,7 @@ Routes are declared in `TomasBFerreira/traefik-gitops`. This repo does not manag
 homelab and are NOT generated. Update them when a host, container or app is added or removed. The page
 is public: role names only, no IPs, VMIDs or blue/green slot names (a spec enforces this). Icons are
 vendored in `public/icons/` (attribution in `NOTICE.md`); add the file, then add its key to the list in
-`inventory.data.spec.ts`. The service-coverage CI check covers tiles, not this inventory.
+`inventory.data.spec.ts`; CI (`scripts/check-icons.mjs`) fails if a referenced icon file is missing. The service-coverage check covers tiles, not this inventory.
 
 ---
 

@@ -9,16 +9,15 @@ export type Access = 'public' | 'sso' | 'private';
 export type ChipGroup = 'network';
 export type HostEnv = 'prod' | 'dev' | 'qa';
 
-export interface TopoItem {
+/** Optional live-status link: a SERVICES id; `noLink` keeps the status dot but hides the Open link. */
+export interface Linkable { serviceId?: string; noLink?: boolean; }
+
+export interface TopoItem extends Linkable {
   id: string;
   label: string;
   desc: string;
   /** Which traffic paths run through this item; items on neither stay in the background. */
   paths: PathKind[];
-  /** Matches a SERVICES id to show a live status dot and an open link. */
-  serviceId?: string;
-  /** Keep the status dot but don't offer an "Open" link. */
-  noLink?: boolean;
   access?: Access;
 }
 
@@ -62,7 +61,7 @@ export const CHIP_GAP = 8;
 export const GROUP_LABEL_H = 18;
 export const GROUP_PAD = 6;
 export const HOST_HEAD_H = 44;
-/** Room under the chips for the "16 LXC · 1 VM · 15 apps" line. */
+/** Room under the chips for the "N LXC · 1 VM · N apps" summary line. */
 export const HOST_FOOT_H = 28;
 export const GROUP_ORDER: ChipGroup[] = ['network'];
 

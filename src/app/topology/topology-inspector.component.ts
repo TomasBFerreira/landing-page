@@ -1,14 +1,13 @@
 import { Component, computed, input, output } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { HOSTS, PathKind } from './topology.data';
+import { HOSTS, Linkable, PathKind } from './topology.data';
 import { INVENTORY, inventoryCounts } from './inventory.data';
-import { Linkable, TopologyLookupService } from './topology-lookup.service';
+import { TopologyLookupService } from './topology-lookup.service';
 
 /** Lists what runs inside one Proxmox host: LXC containers, then the k3s worker VM and its apps. */
 @Component({
   selector: 'app-topology-inspector',
   standalone: true,
-  imports: [CommonModule],
+  imports: [],
   host: { '[class.private]': "mode() === 'private'" },
   templateUrl: './topology-inspector.component.html',
   styleUrl: './topology-inspector.component.scss',
@@ -28,8 +27,8 @@ export class TopologyInspectorComponent {
 
   constructor(private lookup: TopologyLookupService) {}
 
-  /** Phones start with the sections collapsed so the page isn't a wall of cards. */
-  readonly startOpen = typeof matchMedia === 'function' ? !matchMedia('(max-width: 520px)').matches : true;
+  /** Narrow screens (same 860px switch as the map) start with the sections collapsed so it isn't a wall of cards. */
+  readonly startOpen = typeof matchMedia === 'function' ? !matchMedia('(max-width: 860px)').matches : true;
 
   /** Live status and links come from prod probes, so only the prod host gets them. */
   private isProd(): boolean { return this.current().host.env === 'prod'; }

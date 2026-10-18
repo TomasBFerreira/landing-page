@@ -1,6 +1,7 @@
 name: Check service coverage
 
-# Fails if traefik-gitops routes a prod hostname the landing page doesn't list.
+# Fails if traefik-gitops routes a prod hostname the landing page doesn't list,
+# or if the topology inventory references an icon file that doesn't exist.
 on:
   pull_request:
   schedule:
@@ -29,3 +30,6 @@ jobs:
 
       - name: Compare
         run: node scripts/check-service-coverage.mjs "$RUNNER_TEMP/services.yml"
+
+      - name: Check topology icons exist
+        run: node scripts/check-icons.mjs
