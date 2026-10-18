@@ -1,0 +1,43 @@
+.summary {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 18px;
+  font-size: 14px; color: var(--text-muted);
+}
+
+.group { margin-bottom: 18px; }
+.group__label {
+  font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.group__list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px;
+}
+
+.tile {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.15s, transform 0.15s;
+  &:hover { border-color: var(--orange); text-decoration: none; transform: translateY(-1px); }
+  &:focus-visible { outline: 2px solid var(--orange); outline-offset: 2px; }
+}
+.tile__name  { font-weight: 500; font-size: 14px; flex: 1; }
+.tile__arrow { color: var(--text-dim); font-size: 13px; }
+
+.dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--text-dim);
+  flex: none;
+  &--up   { background: var(--green); }
+  &--down { background: var(--red); }
+}
+
+@media (prefers-reduced-motion: reduce) { .tile { transition: none; } }

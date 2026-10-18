@@ -1,0 +1,118 @@
+<div class="topo">
+  <div class="topo__controls" role="group" aria-label="Traffic path">
+    @for (m of modes; track m.id) {
+      <button type="button" class="topo__mode" [class.topo__mode--on]="mode() === m.id"
+              [class.topo__mode--private]="m.id === 'private'"
+              [attr.aria-pressed]="mode() === m.id" (click)="setMode(m.id)">
+        <span class="topo__mode-label">{{ m.label }}</span>
+        <span class="topo__mode-hint">{{ m.hint }}</span>
+      </button>
+    }
+  </div>
+
+  <!-- Wide screens: the map -->
+  <svg class="topo__svg" [attr.viewBox]="'0 0 ' + view.w + ' ' + view.h" role="group"
+       aria-label="Network topology map">
+    @for (ev of edgeViews; track ev.edge.from + ev.edge.to) {
+      <g class="edge" [class.edge--on]="edgeLit(ev.edge)"
+         [class.edge--private]="ev.edge.kind === 'private'"
+         [class.edge--tint]="ev.edge.kind === 'shared' && mode() === 'private'">
+        <path [attr.d]="ev.d" />
+        @if (ev.edge.label) {
+          <text class="edge__label" [attr.x]="ev.lx" [attr.y]="ev.ly">{{ ev.edge.label }}</text>
+        }
+      </g>
+    }
+
+    @for (n of nodes; track n.id) {
+      <g class="node" role="button" tabindex="0" [attr.aria-label]="n.label"
+         [class.node--dim]="!lit(n)" [class.node--sel]="selectedId() === n.id"
+         (click)="select(n.id)" (keydown.enter)="select(n.id)" (keydown.space)="select(n.id); $event.preventDefault()">
+        <rect [attr.x]="n.x" [attr.y]="n.y" [attr.width]="n.w" [attr.height]="n.h" rx="12" />
+        <text [attr.x]="n.x + n.w / 2" [attr.y]="n.y + n.h / 2" class="node__label">{{ n.label }}</text>
+      </g>
+    }
+
+    @for (hv of hostViews; track hv.host.id) {
+      <g class="host" [class.host--dim]="!lit(hv.host)" [attr.data-env]="hv.host.env">
+        <rect class="host__box" [attr.x]="hv.rect.x" [attr.y]="hv.rect.y"
+              [attr.width]="hv.rect.w" [attr.height]="hv.rect.h" rx="16" />
+        <g class="host__head" role="button" tabindex="0" [attr.aria-label]="hv.host.name + ' (' + hv.host.env + ')'"
+           (click)="select(hv.host.id)" (keydown.enter)="select(hv.host.id)"
+           (keydown.space)="select(hv.host.id); $event.preventDefault()">
+          <text [attr.x]="hv.rect.x + 16" [attr.y]="hv.rect.y + 28" class="host__name">{{ hv.host.name }}</text>
+          <text [attr.x]="hv.rect.x + hv.rect.w - 16" [attr.y]="hv.rect.y + 28" class="host__env">{{ hv.host.env }}</text>
+        </g>
+        @for (g of hv.groups; track g.label) {
+          <text [attr.x]="g.x" [attr.y]="g.y" class="group__label">{{ g.label }}</text>
+          @for (cv of g.chips; track cv.chip.id) {
+            <g class="chip" role="button" tabindex="0" [attr.aria-label]="cv.chip.label"
+               [class.chip--lit]="lit(cv.chip)" [class.chip--private]="mode() === 'private'"
+               [class.chip--sel]="selectedId() === cv.chip.id"
+               (click)="select(cv.chip.id)" (keydown.enter)="select(cv.chip.id)"
+               (keydown.space)="select(cv.chip.id); $event.preventDefault()">
+              <rect [attr.x]="cv.rect.x" [attr.y]="cv.rect.y" [attr.width]="cv.rect.w" [attr.height]="cv.rect.h" rx="8" />
+              <text [attr.x]="cv.rect.x + 10" [attr.y]="cv.rect.y + cv.rect.h / 2" class="chip__label">{{ cv.chip.label }}</text>
+              @if (statusFor(cv.chip); as st) {
+                <circle [attr.cx]="cv.rect.x + cv.rect.w - 12" [attr.cy]="cv.rect.y + cv.rect.h / 2" r="4"
+                        class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'" />
+              }
+            </g>
+          }
+        }
+      </g>
+    }
+  </svg>
+
+  <!-- Narrow screens: the same data as a stepper + accordions -->
+  <div class="topo__mobile">
+    <ol class="steps" [class.steps--private]="mode() === 'private'">
+      @for (s of steps(); track s.id) {
+        <li>
+          <button type="button" class="step" (click)="select(s.id)">
+            <span class="step__label">{{ s.label }}</span>
+            @if (statusFor(s); as st) {
+              <span class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'"></span>
+            }
+          </button>
+        </li>
+      }
+    </ol>
+
+    @for (hv of hostViews; track hv.host.id) {
+      <details class="acc" [class.acc--dim]="!lit(hv.host)">
+        <summary>
+          <span class="acc__name">{{ hv.host.name }}</span>
+          <span class="acc__env" [attr.data-env]="hv.host.env">{{ hv.host.env }}</span>
+          <span class="acc__count">{{ chipCount(hv) }}</span>
+        </summary>
+        @for (g of hv.groups; track g.label) {
+          <p class="acc__group">{{ g.label }}</p>
+          <div class="acc__chips">
+            @for (cv of g.chips; track cv.chip.id) {
+              <button type="button" class="mchip" [class.mchip--lit]="lit(cv.chip)" (click)="select(cv.chip.id)">
+                {{ cv.chip.label }}
+                @if (statusFor(cv.chip); as st) {
+                  <span class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'"></span>
+                }
+              </button>
+            }
+          </div>
+        }
+      </details>
+    }
+  </div>
+
+  @if (selected(); as s) {
+    <aside class="detail" role="region" aria-live="polite" [attr.aria-label]="s.label">
+      <button type="button" class="detail__close" (click)="close()" aria-label="Close details">×</button>
+      <h3 class="detail__title">{{ s.label }}</h3>
+      <p class="detail__desc">{{ s.desc }}</p>
+      <p class="detail__meta">
+        @if (accessLabel(s); as a) { <span class="pill">{{ a }}</span> }
+        @if (statusFor(s); as st) { <span class="pill pill--{{ st }}">{{ st }}</span> }
+        @if (urlFor(s); as u) { <a [href]="u" target="_blank" rel="noopener">Open ↗</a> }
+      </p>
+    </aside>
+  }
+</div>

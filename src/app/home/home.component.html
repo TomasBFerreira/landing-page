@@ -5,11 +5,6 @@
       <span class="hero__title-accent">{{ hero().title_prefix }}</span>{{ hero().title_accent }}<span class="hero__title-dim">{{ hero().title_suffix }}</span>
     </h1>
     <p class="hero__sub">{{ hero().subline }}</p>
-    <div class="hero__badges">
-      @for (b of hero().badges; track b.label) {
-        <span class="tag tag--infra">{{ b.label }}</span>
-      }
-    </div>
     @if (hero().cta_label && hero().cta_route) {
       <p class="hero__meta mono">
         Curious about the AI piece? See
@@ -22,22 +17,18 @@
 <div class="home__inner">
 
   <section class="home__section">
-    <p class="section-label">Apps</p>
-    <h2 class="section-heading">Services &amp; apps</h2>
+    <p class="section-label">Topology</p>
+    <h2 class="section-heading">How it fits together</h2>
     <p class="home__section-sub">
-      Everything running on the homelab. Health is polled every 30 seconds —
-      click any card to open the service.
+      From the public internet to the Proxmox hosts. Switch paths, and tap any box for details.
     </p>
-    <app-services-grid />
+    <app-topology-map />
   </section>
 
   <section class="home__section">
-    <p class="section-label">Infrastructure</p>
-    <h2 class="section-heading">How it fits together</h2>
-    <p class="home__section-sub">
-      The platform underneath the apps, from the edge down to the cluster.
-    </p>
-    <app-infra-diagram />
+    <p class="section-label">Apps</p>
+    <h2 class="section-heading">What runs on it</h2>
+    <app-service-launcher />
   </section>
 
 </div>

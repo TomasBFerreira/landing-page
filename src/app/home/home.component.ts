@@ -1,14 +1,14 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { InfraDiagramComponent } from '../infra-diagram/infra-diagram.component';
-import { ServicesGridComponent } from '../services-grid/services-grid.component';
+import { TopologyMapComponent } from '../topology/topology-map.component';
+import { ServiceLauncherComponent } from '../launcher/service-launcher.component';
 import { CmsService, HeroContent } from '../cms.service';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, InfraDiagramComponent, ServicesGridComponent],
+  imports: [CommonModule, RouterLink, TopologyMapComponent, ServiceLauncherComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.scss',
 })
@@ -20,16 +20,8 @@ export class HomeComponent implements OnInit {
     title_prefix: 'data',
     title_accent: 'baes',
     title_suffix: '.net',
-    subline:      'A self-hosted homelab running on bare-metal Proxmox — Kubernetes workloads on k3s, secrets in Vault, SSO via Authentik, a GitOps deploy pipeline, and a small AI integration in the incident path. Everything below is live.',
-    badges: [
-      { label: 'Proxmox VE'   },
-      { label: 'k3s'          },
-      { label: 'Rancher'      },
-      { label: 'Vault HA'     },
-      { label: 'Authentik SSO'},
-      { label: 'Traefik'      },
-      { label: 'Cloudflare'   },
-    ],
+    subline:      'A self-hosted homelab on bare-metal Proxmox: k3s workloads, Vault, Authentik SSO and a GitOps deploy pipeline. The map below is live.',
+    badges: [],
     cta_label: "how it's integrated →",
     cta_route: '/showcase',
   });
