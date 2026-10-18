@@ -1,36 +1,35 @@
-import { Component, HostListener, computed, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, ViewChild, computed, signal } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { TopologyLookupService } from './topology-lookup.service';
 import { TopologyInspectorComponent } from './topology-inspector.component';
+import { DiagramBoxComponent } from './diagram-box.component';
+import { Rect, layoutDiagram } from './diagram-layout';
+import { iconUrl } from './icons';
 import { ServiceStatus } from '../models/service.model';
-import {
-  CHIP_GAP, CHIP_H, CHIP_W, EDGES, GROUP_LABEL_H, GROUP_PAD, GROUP_ORDER, HOSTS, HOST_H, HOST_HEAD_H, HOST_W,
-  NODES, STEPS, STEP_ITEMS, VIEW,
-  ChipGroup, Linkable, PathKind, TopoChip, TopoEdge, TopoHost, TopoItem,
-} from './topology.data';
-import { INVENTORY, inventoryCounts } from './inventory.data';
+import { EDGES, HOSTS, NODES, STEPS, STEP_ITEMS, Linkable, PathKind, TopoEdge, TopoItem } from './topology.data';
 
-const GROUP_LABEL: Record<ChipGroup, string> = { network: 'Network plane' };
-
-interface Rect { x: number; y: number; w: number; h: number; }
-interface ChipView { chip: TopoChip; rect: Rect; }
-interface GroupView { label: string; x: number; y: number; chips: ChipView[]; }
-interface HostView { host: TopoHost; rect: Rect; groups: GroupView[]; summary: string; sumY: number; }
 interface EdgeView { edge: TopoEdge; d: string; lx: number; ly: number; }
 
+const MAX_ZOOM_IN = 10;   // smallest viewBox is 1/10th of the canvas width
+const WHEEL_SPEED = 0.0015;
+const DRAG_THRESHOLD = 5; // px before a press becomes a pan, so clicks on boxes still select
+
 /**
- * Interactive topology map. topology.data.ts drives the map (SVG on wide
- * screens, a stepper on narrow ones); inventory.data.ts drives the inspector
- * that lists what runs inside each Proxmox host.
+ * Interactive topology diagram. The whole homelab is one SVG: the network path
+ * on top, then each Proxmox host with its LXC containers and the k3s VM and
+ * apps inside. It is dense, so a fullscreen view adds pan and zoom. On phones
+ * the SVG is hidden in favour of the stepper and the inspector list.
  */
 @Component({
   selector: 'app-topology-map',
   standalone: true,
-  imports: [TopologyInspectorComponent],
+  imports: [NgTemplateOutlet, TopologyInspectorComponent, DiagramBoxComponent],
   templateUrl: './topology-map.component.html',
   styleUrl: './topology-map.component.scss',
 })
-export class TopologyMapComponent {
-  readonly view = VIEW;
+export class TopologyMapComponent implements OnDestroy {
+  readonly layout = layoutDiagram();
+  readonly view = { w: this.layout.width, h: this.layout.height };
   readonly nodes = NODES;
   readonly modes: { id: PathKind; label: string; hint: string }[] = [
     { id: 'public',  label: 'Public path',        hint: 'Internet → Cloudflare → tunnel' },
@@ -40,17 +39,16 @@ export class TopologyMapComponent {
   readonly mode = signal<PathKind>('public');
   readonly selectedId = signal<string | null>(null);
   readonly inspectId = signal<string>('betsy');
+  readonly fullscreen = signal(false);
+  readonly vb = signal<Rect>({ x: 0, y: 0, w: this.layout.width, h: this.layout.height });
 
-  readonly hostViews: HostView[] = HOSTS.map(h => this.layoutHost(h));
   readonly edgeViews: EdgeView[] = EDGES.map(e => this.layoutEdge(e));
+  readonly iconUrl = iconUrl;
 
   private readonly itemsById = new Map<string, TopoItem>([
     ...NODES.map(n => [n.id, n] as [string, TopoItem]),
     ...STEP_ITEMS.map(i => [i.id, i] as [string, TopoItem]),
-    ...HOSTS.flatMap(h => [
-      [h.id, { id: h.id, label: h.name, desc: h.desc, paths: h.paths } as TopoItem] as [string, TopoItem],
-      ...h.chips.map(c => [c.id, c] as [string, TopoItem]),
-    ]),
+    ...this.layout.items,
   ]);
 
   readonly selected = computed(() => {
@@ -61,27 +59,50 @@ export class TopologyMapComponent {
   readonly steps = computed(() =>
     STEPS[this.mode()].map(id => this.itemsById.get(id)).filter((i): i is TopoItem => !!i));
 
+  @ViewChild('fsRoot') private fsRoot?: ElementRef<HTMLElement>;
+  @ViewChild('expandBtn') private expandBtn?: ElementRef<HTMLButtonElement>;
+
+  private opener: HTMLElement | null = null;
+  private readonly pointers = new Map<number, { x: number; y: number }>();
+  private pressStart: { x: number; y: number } | null = null;
+  private dragged = false;
+  private suppressClick = false;
+
   constructor(private lookup: TopologyLookupService) {}
 
-  setMode(m: PathKind): void { this.mode.set(m); }
-  select(id: string): void { this.selectedId.set(this.selectedId() === id ? null : id); }
-  close(): void { this.selectedId.set(null); }
-  inspect(id: string): void { this.inspectId.set(id); }
+  ngOnDestroy(): void { if (this.fullscreen()) document.body.style.overflow = ''; }
 
-  /** Clicking a host box in the map opens it in the inspector below. */
-  inspectFromMap(id: string): void {
-    this.inspect(id);
-    document.getElementById('topo-inspector')?.scrollIntoView({
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
-      block: 'start',
-    });
+  // ── selection ────────────────────────────────────────────────────────────
+  setMode(m: PathKind): void { this.mode.set(m); }
+  select(id: string): void {
+    if (this.suppressClick) { this.suppressClick = false; return; }
+    this.selectedId.set(this.selectedId() === id ? null : id);
   }
+  closeDetail(): void { this.selectedId.set(null); }
+  inspect(id: string): void { this.inspectId.set(id); }
 
   lit(item: { paths: PathKind[] }): boolean { return item.paths.includes(this.mode()); }
   edgeLit(e: TopoEdge): boolean { return e.kind === 'shared' || e.kind === this.mode(); }
 
-  statusFor(item: Linkable): ServiceStatus | null { return this.lookup.statusFor(item); }
-  urlFor(item: Linkable): string | null { return this.lookup.urlFor(item); }
+  /** Lit when on the active path, dimmed when on the other path only, neutral when on neither. */
+  boxState(paths: PathKind[]): 'lit' | 'dim' | 'plain' {
+    if (!paths.length) return 'plain';
+    return paths.includes(this.mode()) ? 'lit' : 'dim';
+  }
+
+  isProd(hostId: string): boolean { return HOSTS.find(h => h.id === hostId)?.env === 'prod'; }
+
+  /** Live status and links come from prod probes, so only prod gets them. */
+  statusFor(item: Linkable, hostId?: string): ServiceStatus | null {
+    if (hostId && !this.isProd(hostId)) return null;
+    return this.lookup.statusFor(item);
+  }
+  urlFor(item: Linkable): string | null {
+    const id = (item as TopoItem).id;
+    const host = id?.includes(':') ? id.split(':')[0] : undefined;
+    if (host && !this.isProd(host)) return null;
+    return this.lookup.urlFor(item);
+  }
 
   accessLabel(item: TopoItem): string | null {
     switch (item.access) {
@@ -92,43 +113,143 @@ export class TopologyMapComponent {
     }
   }
 
-  @HostListener('document:keydown.escape')
-  onEscape(): void { if (this.selectedId()) this.close(); }
+  // ── fullscreen + pan/zoom ───────────────────────────────────────────────
+  open(): void {
+    this.opener = document.activeElement as HTMLElement | null;
+    this.resetView();
+    this.fullscreen.set(true);
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => this.fsRoot?.nativeElement.querySelector<HTMLElement>('.fs__close')?.focus());
+  }
 
-  private layoutHost(host: TopoHost): HostView {
-    const rect: Rect = { x: host.x, y: host.y, w: HOST_W, h: HOST_H };
-    let cursor = host.y + HOST_HEAD_H;
-    const groups: GroupView[] = [];
-    for (const g of GROUP_ORDER) {
-      const members = host.chips.filter(c => c.group === g);
-      if (!members.length) continue;
-      const gy = cursor;
-      cursor += GROUP_LABEL_H;
-      const chips = members.map((chip, i): ChipView => ({
-        chip,
-        rect: {
-          x: host.x + 12 + (i % 2) * (CHIP_W + CHIP_GAP),
-          y: cursor + Math.floor(i / 2) * (CHIP_H + CHIP_GAP),
-          w: CHIP_W, h: CHIP_H,
-        },
-      }));
-      cursor += Math.ceil(members.length / 2) * (CHIP_H + CHIP_GAP) + GROUP_PAD;
-      groups.push({ label: GROUP_LABEL[g], x: host.x + 12, y: gy + 10, chips });
-    }
-    const c = inventoryCounts(INVENTORY[host.id]);
+  close(): void {
+    this.fullscreen.set(false);
+    document.body.style.overflow = '';
+    (this.opener ?? this.expandBtn?.nativeElement)?.focus();
+    this.opener = null;
+  }
+
+  resetView(): void { this.vb.set({ x: 0, y: 0, w: this.view.w, h: this.view.h }); }
+
+  zoomBy(factor: number): void {
+    const v = this.vb();
+    this.zoomAt(factor, { x: v.x + v.w / 2, y: v.y + v.h / 2 });
+  }
+
+  private zoomAt(factor: number, p: { x: number; y: number }): void {
+    const v = this.vb();
+    const w = Math.min(Math.max(v.w * factor, this.view.w / MAX_ZOOM_IN), this.view.w * 1.1);
+    const k = w / v.w;
+    this.vb.set(this.clampView({ x: p.x - (p.x - v.x) * k, y: p.y - (p.y - v.y) * k, w, h: v.h * k }));
+  }
+
+  private pan(dx: number, dy: number): void {
+    const v = this.vb();
+    this.vb.set(this.clampView({ ...v, x: v.x + dx, y: v.y + dy }));
+  }
+
+  /** Keeps at least a third of the canvas on screen so you can't lose the diagram. */
+  private clampView(v: Rect): Rect {
+    const mx = v.w * 0.66;
+    const my = v.h * 0.66;
     return {
-      host, rect, groups,
-      summary: `${c.lxcs} LXC · 1 VM · ${c.apps} apps`,
-      sumY: host.y + HOST_H - 18,
+      ...v,
+      x: Math.min(Math.max(v.x, -mx), this.view.w - v.w + mx),
+      y: Math.min(Math.max(v.y, -my), this.view.h - v.h + my),
     };
   }
 
-  private rectOf(id: string): Rect {
-    const n = NODES.find(x => x.id === id);
-    if (n) return n;
-    const h = HOSTS.find(x => x.id === id);
-    if (h) return { x: h.x, y: h.y, w: HOST_W, h: HOST_H };
-    throw new Error(`topology: unknown edge endpoint ${id}`);
+  private toSvg(svg: SVGSVGElement, cx: number, cy: number): { x: number; y: number } {
+    const m = svg.getScreenCTM();
+    if (!m) return { x: 0, y: 0 };
+    const pt = svg.createSVGPoint();
+    pt.x = cx; pt.y = cy;
+    const r = pt.matrixTransform(m.inverse());
+    return { x: r.x, y: r.y };
+  }
+
+  onWheel(e: WheelEvent): void {
+    e.preventDefault();
+    const svg = e.currentTarget as SVGSVGElement;
+    this.zoomAt(Math.exp(e.deltaY * WHEEL_SPEED), this.toSvg(svg, e.clientX, e.clientY));
+  }
+
+  onPointerDown(e: PointerEvent): void {
+    this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (this.pointers.size === 1) { this.pressStart = { x: e.clientX, y: e.clientY }; this.dragged = false; this.suppressClick = false; }
+  }
+
+  onPointerMove(e: PointerEvent): void {
+    const prev = this.pointers.get(e.pointerId);
+    if (!prev) return;
+    const svg = e.currentTarget as SVGSVGElement;
+    this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (this.pointers.size >= 2) {
+      const other = [...this.pointers.entries()].find(([id]) => id !== e.pointerId)![1];
+      const before = Math.hypot(prev.x - other.x, prev.y - other.y);
+      const now = Math.hypot(e.clientX - other.x, e.clientY - other.y);
+      if (before > 0 && now > 0) {
+        this.dragged = true;
+        this.zoomAt(before / now, this.toSvg(svg, (e.clientX + other.x) / 2, (e.clientY + other.y) / 2));
+      }
+      return;
+    }
+
+    if (!this.dragged && this.pressStart &&
+        Math.hypot(e.clientX - this.pressStart.x, e.clientY - this.pressStart.y) < DRAG_THRESHOLD) return;
+    if (!this.dragged) { this.dragged = true; svg.setPointerCapture(e.pointerId); }
+    const m = svg.getScreenCTM();
+    if (m) this.pan(-(e.clientX - prev.x) / m.a, -(e.clientY - prev.y) / m.d);
+  }
+
+  onPointerUp(e: PointerEvent): void {
+    this.pointers.delete(e.pointerId);
+    if (this.dragged) {
+      // A pan must not also click the box under the cursor. Pointer capture retargets the click to the
+      // svg, so the flag may never be consumed; expire it so it can't swallow the next real click.
+      this.suppressClick = true;
+      setTimeout(() => { this.suppressClick = false; });
+    }
+    if (this.pointers.size === 0) { this.pressStart = null; this.dragged = false; }
+  }
+
+  onFsKey(e: KeyboardEvent): void {
+    const step = this.vb().w * 0.08;
+    switch (e.key) {
+      case '+': case '=': this.zoomBy(0.8); break;
+      case '-': case '_': this.zoomBy(1.25); break;
+      case '0': this.resetView(); break;
+      case 'ArrowLeft':  if (this.isBackground(e)) this.pan(-step, 0); break;
+      case 'ArrowRight': if (this.isBackground(e)) this.pan(step, 0); break;
+      case 'ArrowUp':    if (this.isBackground(e)) this.pan(0, -step); break;
+      case 'ArrowDown':  if (this.isBackground(e)) this.pan(0, step); break;
+      case 'Tab': this.trapFocus(e); return;
+      default: return;
+    }
+    e.preventDefault();
+  }
+
+  /** Arrow keys pan only when no control has focus. */
+  private isBackground(e: KeyboardEvent): boolean {
+    return !(e.target as HTMLElement).closest?.('button, [role="button"]');
+  }
+
+  private trapFocus(e: KeyboardEvent): void {
+    const root = this.fsRoot?.nativeElement;
+    if (!root) return;
+    const f = Array.from(root.querySelectorAll<HTMLElement>('button, [role="button"], a[href]'));
+    if (!f.length) return;
+    const first = f[0];
+    const last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+    else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.fullscreen()) this.close();
+    else if (this.selectedId()) this.closeDetail();
   }
 
   private layoutEdge(e: TopoEdge): EdgeView {
@@ -145,5 +266,12 @@ export class TopologyMapComponent {
     const y2 = b.y;
     const mid = y1 + (y2 - y1) / 2;
     return { edge: e, d: `M${x1},${y1} V${mid} H${x2} V${y2}`, lx: x1 + 10, ly: y1 + (y2 - y1) / 2 - 6 };
+  }
+
+  private rectOf(id: string): Rect {
+    const n = NODES.find(x => x.id === id);
+    if (n) return n;
+    if (HOSTS.some(h => h.id === id)) return this.layout.hostRect(id);
+    throw new Error(`topology: unknown edge endpoint ${id}`);
   }
 }

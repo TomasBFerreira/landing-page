@@ -2,6 +2,7 @@ import { Component, computed, input, output } from '@angular/core';
 import { HOSTS, Linkable, PathKind } from './topology.data';
 import { INVENTORY, inventoryCounts } from './inventory.data';
 import { TopologyLookupService } from './topology-lookup.service';
+import { iconUrl } from './icons';
 
 /** Lists what runs inside one Proxmox host: LXC containers, then the k3s worker VM and its apps. */
 @Component({
@@ -45,6 +46,6 @@ export class TopologyInspectorComponent {
     return effective.includes(this.mode()) ? 'lit' : 'dim';
   }
 
-  iconUrl(key: string): string { return `icons/${key}.svg`; }
+  readonly iconUrl = iconUrl;
   initial(name: string): string { return name.trim().charAt(0).toUpperCase(); }
 }

@@ -1,0 +1,28 @@
+<svg:rect class="bg" [attr.x]="box().rect.x" [attr.y]="box().rect.y" [attr.width]="box().rect.w" [attr.height]="box().rect.h" rx="10" />
+<svg:rect class="tile" [attr.x]="box().rect.x + 10" [attr.y]="box().rect.y + 9" width="28" height="28" rx="7" />
+@if (box().icon; as ic) {
+  <svg:image [attr.href]="iconUrl(ic)" [attr.x]="box().rect.x + 13" [attr.y]="box().rect.y + 12" width="22" height="22" />
+} @else {
+  <svg:text class="letter" [attr.x]="box().rect.x + 24" [attr.y]="box().rect.y + 23">{{ initial(box().name) }}</svg:text>
+}
+<svg:text class="name" [attr.x]="box().rect.x + 46" [attr.y]="box().rect.y + 23">{{ box().name }}</svg:text>
+@if (box().stopped) {
+  <svg:text class="tag" [attr.x]="box().rect.x + box().rect.w - 10" [attr.y]="box().rect.y + 23">stopped</svg:text>
+} @else {
+  @if (status(); as st) {
+    <svg:circle class="dot" [class.up]="st === 'up'" [class.down]="st === 'down'"
+                [attr.cx]="box().rect.x + box().rect.w - 14" [attr.cy]="box().rect.y + 23" r="4">
+      <svg:title>{{ st }}</svg:title>
+    </svg:circle>
+  }
+}
+@for (p of box().pills; track $index) {
+  <svg:g class="pill">
+    <svg:rect [attr.x]="p.x" [attr.y]="p.y" [attr.width]="p.w" height="20" rx="10" />
+    @if (p.icon; as pi) {
+      <svg:rect class="ptile" [attr.x]="p.x + 4" [attr.y]="p.y + 3" width="14" height="14" rx="3" />
+      <svg:image [attr.href]="iconUrl(pi)" [attr.x]="p.x + 5" [attr.y]="p.y + 4" width="12" height="12" />
+    }
+    <svg:text [attr.x]="p.x + (p.icon ? 22 : 8)" [attr.y]="p.y + 10">{{ p.label }}</svg:text>
+  </svg:g>
+}

@@ -1,5 +1,57 @@
 <div class="topo">
-  <div class="topo__controls" role="group" aria-label="Traffic path">
+  <div class="topo__bar">
+    <ng-container *ngTemplateOutlet="modeT" />
+    <button #expandBtn type="button" class="topo__expand" (click)="open()" aria-haspopup="dialog">
+      <span aria-hidden="true">⤢</span> Full diagram
+    </button>
+  </div>
+
+  <!-- Wide screens: the whole homelab as one diagram -->
+  <div class="topo__inline">
+    <ng-container *ngTemplateOutlet="diagram; context: { full: false }" />
+  </div>
+
+  <!-- Narrow screens: the path as a stepper, then the inspector list -->
+  <ol class="steps" [class.steps--private]="mode() === 'private'">
+    @for (s of steps(); track s.id) {
+      <li>
+        <button type="button" class="step" (click)="select(s.id)">
+          <span class="step__label">{{ s.label }}</span>
+        </button>
+      </li>
+    }
+  </ol>
+
+  @if (selected() && !fullscreen()) {
+    <ng-container *ngTemplateOutlet="detailT" />
+  }
+
+  <app-topology-inspector [mode]="mode()" [hostId]="inspectId()" (hostChange)="inspect($event)" />
+</div>
+
+@if (fullscreen()) {
+  <div #fsRoot class="fs" role="dialog" aria-modal="true" aria-label="Full homelab diagram" (keydown)="onFsKey($event)">
+    <div class="fs__bar">
+      <ng-container *ngTemplateOutlet="modeT" />
+      <span class="fs__tools" role="group" aria-label="Zoom">
+        <button type="button" (click)="zoomBy(0.8)" aria-label="Zoom in">+</button>
+        <button type="button" (click)="zoomBy(1.25)" aria-label="Zoom out">−</button>
+        <button type="button" (click)="resetView()" aria-label="Reset view">Fit</button>
+        <button type="button" class="fs__close" (click)="close()" aria-label="Close full diagram">✕</button>
+      </span>
+    </div>
+    <p class="fs__hint">Drag to pan · scroll or pinch to zoom · click a box for details</p>
+    <div class="fs__stage">
+      <ng-container *ngTemplateOutlet="diagram; context: { full: true }" />
+    </div>
+    @if (selected()) {
+      <ng-container *ngTemplateOutlet="detailT" />
+    }
+  </div>
+}
+
+<ng-template #modeT>
+  <span class="topo__controls" role="group" aria-label="Traffic path">
     @for (m of modes; track m.id) {
       <button type="button" class="topo__mode" [class.topo__mode--on]="mode() === m.id"
               [class.topo__mode--private]="m.id === 'private'"
@@ -8,11 +60,32 @@
         <span class="topo__mode-hint">{{ m.hint }}</span>
       </button>
     }
-  </div>
+  </span>
+</ng-template>
 
-  <!-- Wide screens: the map -->
-  <svg class="topo__svg" [attr.viewBox]="'0 0 ' + view.w + ' ' + view.h" role="group"
-       aria-label="Network topology map">
+<ng-template #detailT>
+  @if (selected(); as s) {
+    <aside class="detail" role="region" aria-live="polite" [attr.aria-label]="s.label">
+      <button type="button" class="detail__close" (click)="closeDetail()" aria-label="Close details">×</button>
+      <h3 class="detail__title">{{ s.label }}</h3>
+      <p class="detail__desc">{{ s.desc }}</p>
+      <p class="detail__meta">
+        @if (accessLabel(s); as a) { <span class="pill">{{ a }}</span> }
+        @if (statusFor(s, s.id.split(':')[0]); as st) { <span class="pill pill--{{ st }}">{{ st }}</span> }
+        @if (urlFor(s); as u) { <a [href]="u" target="_blank" rel="noopener">Open ↗</a> }
+      </p>
+    </aside>
+  }
+</ng-template>
+
+<ng-template #diagram let-full="full">
+  <svg class="topo__svg" [class.topo__svg--full]="full"
+       [attr.viewBox]="full ? vb().x + ' ' + vb().y + ' ' + vb().w + ' ' + vb().h : '0 0 ' + view.w + ' ' + view.h"
+       role="group" aria-label="Homelab topology diagram"
+       (wheel)="full && onWheel($event)"
+       (pointerdown)="full && onPointerDown($event)" (pointermove)="full && onPointerMove($event)"
+       (pointerup)="full && onPointerUp($event)" (pointercancel)="full && onPointerUp($event)">
+
     @for (ev of edgeViews; track ev.edge.from + ev.edge.to) {
       <g class="edge" [class.edge--on]="edgeLit(ev.edge)"
          [class.edge--private]="ev.edge.kind === 'private'"
@@ -33,66 +106,40 @@
       </g>
     }
 
-    @for (hv of hostViews; track hv.host.id) {
-      <g class="host" [class.host--dim]="!lit(hv.host)" [class.host--active]="inspectId() === hv.host.id"
-         [attr.data-env]="hv.host.env">
-        <rect class="host__box" [attr.x]="hv.rect.x" [attr.y]="hv.rect.y"
-              [attr.width]="hv.rect.w" [attr.height]="hv.rect.h" rx="16" />
-        <g class="host__head" role="button" tabindex="0"
-           [attr.aria-label]="'Inspect ' + hv.host.name + ' (' + hv.host.env + ')'"
-           (click)="inspectFromMap(hv.host.id)" (keydown.enter)="inspectFromMap(hv.host.id)"
-           (keydown.space)="inspectFromMap(hv.host.id); $event.preventDefault()">
-          <text [attr.x]="hv.rect.x + 16" [attr.y]="hv.rect.y + 28" class="host__name">{{ hv.host.name }}</text>
-          <text [attr.x]="hv.rect.x + hv.rect.w - 16" [attr.y]="hv.rect.y + 28" class="host__env">{{ hv.host.env }}</text>
+    @for (hl of layout.hosts; track hl.host.id) {
+      <g class="host" [class.host--dim]="!lit(hl.host)" [attr.data-env]="hl.host.env">
+        <rect class="host__box" [attr.x]="hl.rect.x" [attr.y]="hl.rect.y" [attr.width]="hl.rect.w" [attr.height]="hl.rect.h" rx="16" />
+        <g class="host__head" role="button" tabindex="0" [attr.aria-label]="hl.host.name + ' (' + hl.host.env + ')'"
+           (click)="select(hl.host.id)" (keydown.enter)="select(hl.host.id)"
+           (keydown.space)="select(hl.host.id); $event.preventDefault()">
+          <rect class="host__hit" [attr.x]="hl.rect.x" [attr.y]="hl.rect.y" [attr.width]="hl.rect.w" height="44" rx="16" />
+          <text [attr.x]="hl.rect.x + 16" [attr.y]="hl.rect.y + 24" class="host__name">{{ hl.host.name }}</text>
+          <text [attr.x]="hl.rect.x + 16 + hl.host.name.length * 10.4 + 10" [attr.y]="hl.rect.y + 25" class="host__env">{{ hl.host.env }}</text>
+          <text [attr.x]="hl.rect.x + hl.rect.w - 16" [attr.y]="hl.rect.y + 25" class="host__sum">{{ hl.summary }}</text>
         </g>
-        @for (g of hv.groups; track g.label) {
-          <text [attr.x]="g.x" [attr.y]="g.y" class="group__label">{{ g.label }}</text>
-          @for (cv of g.chips; track cv.chip.id) {
-            <g class="chip" role="button" tabindex="0" [attr.aria-label]="cv.chip.label"
-               [class.chip--lit]="lit(cv.chip)" [class.chip--private]="mode() === 'private'"
-               [class.chip--sel]="selectedId() === cv.chip.id"
-               (click)="select(cv.chip.id)" (keydown.enter)="select(cv.chip.id)"
-               (keydown.space)="select(cv.chip.id); $event.preventDefault()">
-              <rect [attr.x]="cv.rect.x" [attr.y]="cv.rect.y" [attr.width]="cv.rect.w" [attr.height]="cv.rect.h" rx="8" />
-              <text [attr.x]="cv.rect.x + 10" [attr.y]="cv.rect.y + cv.rect.h / 2" class="chip__label">{{ cv.chip.label }}</text>
-              @if (statusFor(cv.chip); as st) {
-                <circle [attr.cx]="cv.rect.x + cv.rect.w - 12" [attr.cy]="cv.rect.y + cv.rect.h / 2" r="4"
-                        class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'" />
-              }
-            </g>
-          }
+
+        <text class="section__label" [attr.x]="hl.rect.x + 16" [attr.y]="hl.lxcLabelY + 12">LXC containers</text>
+        @for (b of hl.lxcs; track b.id) {
+          <g appDiagramBox [box]="b" [state]="boxState(b.paths)" [mode]="mode()"
+             [selected]="selectedId() === b.id" [status]="statusFor(b, hl.host.id)" (pick)="select($event)" />
         }
-        <text class="host__sum" [attr.x]="hv.rect.x + 16" [attr.y]="hv.sumY">{{ hv.summary }}</text>
+
+        <g class="vm" [class.vm--sel]="selectedId() === hl.vm.id" role="button" tabindex="0" [attr.aria-label]="'Virtual machine ' + hl.vm.title"
+           (click)="select(hl.vm.id)" (keydown.enter)="select(hl.vm.id)" (keydown.space)="select(hl.vm.id); $event.preventDefault()">
+          <rect class="vm__box" [attr.x]="hl.vm.rect.x" [attr.y]="hl.vm.rect.y" [attr.width]="hl.vm.rect.w" [attr.height]="hl.vm.rect.h" rx="12" />
+          @for (ic of hl.vm.icons; track ic; let i = $index) {
+            <rect class="vm__tile" [attr.x]="hl.vm.rect.x + 10 + i * 32" [attr.y]="hl.vm.rect.y + 9" width="28" height="28" rx="7" />
+            <image [attr.href]="iconUrl(ic)" [attr.x]="hl.vm.rect.x + 13 + i * 32" [attr.y]="hl.vm.rect.y + 12" width="22" height="22" />
+          }
+          <text class="vm__title" [attr.x]="hl.vm.rect.x + 18 + hl.vm.icons.length * 32" [attr.y]="hl.vm.rect.y + 24">
+            Virtual machine · {{ hl.vm.title }}
+          </text>
+        </g>
+        @for (b of hl.vm.apps; track b.id) {
+          <g appDiagramBox [box]="b" [state]="boxState(b.paths)" [mode]="mode()"
+             [selected]="selectedId() === b.id" [status]="statusFor(b, hl.host.id)" (pick)="select($event)" />
+        }
       </g>
     }
   </svg>
-
-  <!-- Narrow screens: the path as a stepper -->
-  <ol class="steps" [class.steps--private]="mode() === 'private'">
-    @for (s of steps(); track s.id) {
-      <li>
-        <button type="button" class="step" (click)="select(s.id)">
-          <span class="step__label">{{ s.label }}</span>
-          @if (statusFor(s); as st) {
-            <span class="dot" [class.dot--up]="st === 'up'" [class.dot--down]="st === 'down'"></span>
-          }
-        </button>
-      </li>
-    }
-  </ol>
-
-  @if (selected(); as s) {
-    <aside class="detail" role="region" aria-live="polite" [attr.aria-label]="s.label">
-      <button type="button" class="detail__close" (click)="close()" aria-label="Close details">×</button>
-      <h3 class="detail__title">{{ s.label }}</h3>
-      <p class="detail__desc">{{ s.desc }}</p>
-      <p class="detail__meta">
-        @if (accessLabel(s); as a) { <span class="pill">{{ a }}</span> }
-        @if (statusFor(s); as st) { <span class="pill pill--{{ st }}">{{ st }}</span> }
-        @if (urlFor(s); as u) { <a [href]="u" target="_blank" rel="noopener">Open ↗</a> }
-      </p>
-    </aside>
-  }
-
-  <app-topology-inspector [mode]="mode()" [hostId]="inspectId()" (hostChange)="inspect($event)" />
-</div>
+</ng-template>
