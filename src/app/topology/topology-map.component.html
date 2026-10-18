@@ -38,7 +38,8 @@
         <rect class="host__box" [attr.x]="hv.rect.x" [attr.y]="hv.rect.y"
               [attr.width]="hv.rect.w" [attr.height]="hv.rect.h" rx="16" />
         <g class="host__head" role="button" tabindex="0" [attr.aria-label]="hv.host.name + ' (' + hv.host.env + ')'"
-           (click)="select(hv.host.id)" (keydown.enter)="select(hv.host.id)">
+           (click)="select(hv.host.id)" (keydown.enter)="select(hv.host.id)"
+           (keydown.space)="select(hv.host.id); $event.preventDefault()">
           <text [attr.x]="hv.rect.x + 16" [attr.y]="hv.rect.y + 28" class="host__name">{{ hv.host.name }}</text>
           <text [attr.x]="hv.rect.x + hv.rect.w - 16" [attr.y]="hv.rect.y + 28" class="host__env">{{ hv.host.env }}</text>
         </g>
@@ -103,7 +104,7 @@
   </div>
 
   @if (selected(); as s) {
-    <aside class="detail" role="dialog" aria-live="polite" [attr.aria-label]="s.label">
+    <aside class="detail" role="region" aria-live="polite" [attr.aria-label]="s.label">
       <button type="button" class="detail__close" (click)="close()" aria-label="Close details">×</button>
       <h3 class="detail__title">{{ s.label }}</h3>
       <p class="detail__desc">{{ s.desc }}</p>

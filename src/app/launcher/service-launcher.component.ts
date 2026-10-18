@@ -37,9 +37,9 @@ export class ServiceLauncherComponent {
     return groups.filter(g => g.items.length);
   });
 
-  /** Only services with a known probe result count; unprobed ones are neither up nor down. */
+  /** Counts the prod tiles shown here that have a known probe result; unprobed ones are neither up nor down. */
   readonly summary = computed(() => {
-    const known = this.health.states().filter(s => s.status === 'up' || s.status === 'down');
+    const known = this.health.states().filter(s => s.service.env === 'prod' && (s.status === 'up' || s.status === 'down'));
     const up = known.filter(s => s.status === 'up').length;
     return { up, known: known.length, down: known.length - up };
   });

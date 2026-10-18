@@ -1,4 +1,4 @@
-import { EDGES, HOSTS, NODES, STEPS, HOST_H } from './topology.data';
+import { EDGES, HOSTS, NODES, STEPS, HOST_H, hostContentHeight } from './topology.data';
 import { SERVICES } from '../services.config';
 
 describe('topology data', () => {
@@ -39,11 +39,14 @@ describe('topology data', () => {
   });
 
   it('fits every host\'s chips inside the host box', () => {
-    expect(HOST_H).toBeGreaterThan(0);
     for (const h of HOSTS) {
-      const rows = (g: string) => Math.ceil(h.chips.filter(c => c.group === g).length / 2);
-      const used = 44 + 3 * 18 + (rows('network') + rows('platform') + rows('workloads')) * 38 + 3 * 6;
-      expect(used).withContext(h.name).toBeLessThanOrEqual(HOST_H);
+      expect(hostContentHeight(h.chips)).withContext(h.name).toBeLessThanOrEqual(HOST_H);
+    }
+  });
+
+  it('does not light dev or QA chips on the public path', () => {
+    for (const h of HOSTS.filter(x => x.env !== 'prod')) {
+      for (const c of h.chips) expect(c.paths).withContext(c.id).not.toContain('public');
     }
   });
 });

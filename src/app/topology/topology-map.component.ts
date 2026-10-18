@@ -1,17 +1,14 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, HostListener, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HealthCheckService } from '../health-check.service';
 import { SERVICES } from '../services.config';
 import { ServiceStatus } from '../models/service.model';
 import {
-  EDGES, HOSTS, HOST_H, HOST_W, NODES, STEPS, VIEW,
+  CHIP_GAP, CHIP_H, CHIP_W, EDGES, GROUP_LABEL_H, GROUP_PAD, HOSTS, HOST_H, HOST_HEAD_H, HOST_W,
+  NODES, STEPS, VIEW,
   ChipGroup, PathKind, TopoChip, TopoEdge, TopoHost, TopoItem,
 } from './topology.data';
 
-const CHIP_W = 135;
-const CHIP_H = 30;
-const CHIP_GAP = 8;
-const GROUP_LABEL_H = 18;
 const GROUPS: { id: ChipGroup; label: string }[] = [
   { id: 'network', label: 'Network' },
   { id: 'platform', label: 'Platform' },
@@ -75,15 +72,22 @@ export class TopologyMapComponent {
   lit(item: { paths: PathKind[] }): boolean { return item.paths.includes(this.mode()); }
   edgeLit(e: TopoEdge): boolean { return e.kind === 'shared' || e.kind === this.mode(); }
 
+  private readonly statusById = computed(() =>
+    new Map(this.health.states().map(s => [s.service.id, s.status] as [string, ServiceStatus])));
+
+  private readonly urlById = new Map(SERVICES.map(s => [s.id, s.url] as [string, string]));
+
   statusFor(item: TopoItem): ServiceStatus | null {
     if (!item.serviceId) return null;
-    return this.health.states().find(s => s.service.id === item.serviceId)?.status ?? 'unknown';
+    return this.statusById().get(item.serviceId) ?? 'unknown';
   }
 
   urlFor(item: TopoItem): string | null {
-    if (!item.serviceId) return null;
-    return SERVICES.find(s => s.id === item.serviceId)?.url ?? null;
+    return item.serviceId ? this.urlById.get(item.serviceId) ?? null : null;
   }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void { this.close(); }
 
   accessLabel(item: TopoItem): string | null {
     switch (item.access) {
@@ -99,7 +103,7 @@ export class TopologyMapComponent {
 
   private layoutHost(host: TopoHost): HostView {
     const rect: Rect = { x: host.x, y: host.y, w: HOST_W, h: HOST_H };
-    let cursor = host.y + 44;
+    let cursor = host.y + HOST_HEAD_H;
     const groups: GroupView[] = [];
     for (const g of GROUPS) {
       const members = host.chips.filter(c => c.group === g.id);
@@ -114,7 +118,7 @@ export class TopologyMapComponent {
           w: CHIP_W, h: CHIP_H,
         },
       }));
-      cursor += Math.ceil(members.length / 2) * (CHIP_H + CHIP_GAP) + 6;
+      cursor += Math.ceil(members.length / 2) * (CHIP_H + CHIP_GAP) + GROUP_PAD;
       groups.push({ label: g.label, x: host.x + 12, y: gy + 10, chips });
     }
     return { host, rect, groups };

@@ -52,6 +52,27 @@ export const VIEW = { w: 1000, h: 865 };
 export const HOST_W = 300;
 export const HOST_H = 395;
 
+// Host-box layout constants. The component lays chips out with these and the
+// spec checks the same numbers, so they can't drift apart.
+export const CHIP_W = 135;
+export const CHIP_H = 30;
+export const CHIP_GAP = 8;
+export const GROUP_LABEL_H = 18;
+export const GROUP_PAD = 6;
+export const HOST_HEAD_H = 44;
+export const GROUP_ORDER: ChipGroup[] = ['network', 'platform', 'workloads'];
+
+/** Vertical space a host's chips need, in the same units as HOST_H. */
+export function hostContentHeight(chips: TopoChip[]): number {
+  let h = HOST_HEAD_H;
+  for (const g of GROUP_ORDER) {
+    const n = chips.filter(c => c.group === g).length;
+    if (!n) continue;
+    h += GROUP_LABEL_H + Math.ceil(n / 2) * (CHIP_H + CHIP_GAP) + GROUP_PAD;
+  }
+  return h;
+}
+
 export const NODES: TopoNode[] = [
   { id: 'internet', label: 'Internet', x: 250, y: 20, w: 200, h: 54, paths: ['public'],
     desc: 'Anyone on the public web. Public hostnames resolve to Cloudflare, never to my home IP.' },
@@ -74,7 +95,7 @@ const net = (env: HostEnv): TopoChip[] => {
         ? 'Holds the outbound Cloudflare Tunnel and hands requests to Traefik.'
         : 'Tunnel daemon for this environment. The public tunnel is opt-in for dev and QA and is off by default.' },
     { id: `${env}-traefik`, group: 'network', label: 'Traefik', serviceId: prod ? 'traefik' : undefined,
-      paths: ['public', 'private'],
+      paths: prod ? ['public', 'private'] : ['private'],
       desc: 'Reverse proxy. Routes by hostname to k3s NodePorts and LXC services. Config is GitOps-managed.' },
     { id: `${env}-adguard`, group: 'network', label: 'AdGuard', paths: ['private'],
       desc: 'DNS for the tailnet. Gives dev and QA hostnames a private answer so they never need a public record.' },
@@ -85,7 +106,7 @@ const net = (env: HostEnv): TopoChip[] => {
 
 const k3s = (env: HostEnv): TopoChip => ({
   id: `${env}-k3s`, group: 'workloads', label: env === 'prod' ? 'k3s workloads' : 'k3s worker',
-  paths: ['public', 'private'],
+  paths: env === 'prod' ? ['public', 'private'] : ['private'],
   desc: env === 'prod'
     ? 'The Kubernetes worker that runs the apps in the launcher below.'
     : 'Kubernetes worker for pre-production builds of the same apps.',
@@ -125,7 +146,7 @@ export const HOSTS: TopoHost[] = [
       ...net('dev'),
       { id: 'dev-vault', group: 'platform', label: 'Vault', paths: [], desc: 'Dev secrets.' },
       { id: 'dev-bootstrap', group: 'platform', label: 'Bootstrap vault', paths: [],
-        desc: 'The stable vault holding SSH keys and blue/green slot state for every environment.' },
+        desc: 'The stable root vault that the other environments depend on.' },
       { id: 'dev-sso', group: 'platform', label: 'Authentik', paths: ['private'], desc: 'Dev SSO.' },
       { id: 'dev-grafana', group: 'platform', label: 'Monitoring', paths: [], desc: 'Dev metrics and logs.' },
       { id: 'dev-semaphore', group: 'platform', label: 'Semaphore', paths: [], desc: 'Ansible runner.' },
