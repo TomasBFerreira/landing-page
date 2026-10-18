@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, ViewChild, computed, signal } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, ViewChild, computed, signal } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { TopologyLookupService } from './topology-lookup.service';
 import { TopologyInspectorComponent } from './topology-inspector.component';
@@ -27,7 +27,7 @@ const DRAG_THRESHOLD = 5; // px before a press becomes a pan, so clicks on boxes
   templateUrl: './topology-map.component.html',
   styleUrl: './topology-map.component.scss',
 })
-export class TopologyMapComponent {
+export class TopologyMapComponent implements OnDestroy {
   readonly layout = layoutDiagram();
   readonly view = { w: this.layout.width, h: this.layout.height };
   readonly nodes = NODES;
@@ -69,6 +69,8 @@ export class TopologyMapComponent {
   private suppressClick = false;
 
   constructor(private lookup: TopologyLookupService) {}
+
+  ngOnDestroy(): void { if (this.fullscreen()) document.body.style.overflow = ''; }
 
   // ── selection ────────────────────────────────────────────────────────────
   setMode(m: PathKind): void { this.mode.set(m); }
@@ -174,7 +176,7 @@ export class TopologyMapComponent {
 
   onPointerDown(e: PointerEvent): void {
     this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
-    if (this.pointers.size === 1) { this.pressStart = { x: e.clientX, y: e.clientY }; this.dragged = false; }
+    if (this.pointers.size === 1) { this.pressStart = { x: e.clientX, y: e.clientY }; this.dragged = false; this.suppressClick = false; }
   }
 
   onPointerMove(e: PointerEvent): void {
@@ -203,7 +205,12 @@ export class TopologyMapComponent {
 
   onPointerUp(e: PointerEvent): void {
     this.pointers.delete(e.pointerId);
-    if (this.dragged) this.suppressClick = true;   // a pan must not also click the box under the cursor
+    if (this.dragged) {
+      // A pan must not also click the box under the cursor. Pointer capture retargets the click to the
+      // svg, so the flag may never be consumed; expire it so it can't swallow the next real click.
+      this.suppressClick = true;
+      setTimeout(() => { this.suppressClick = false; });
+    }
     if (this.pointers.size === 0) { this.pressStart = null; this.dragged = false; }
   }
 

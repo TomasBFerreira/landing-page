@@ -16,7 +16,7 @@
     </svg:circle>
   }
 }
-@for (p of box().pills; track p.label) {
+@for (p of box().pills; track $index) {
   <svg:g class="pill">
     <svg:rect [attr.x]="p.x" [attr.y]="p.y" [attr.width]="p.w" height="20" rx="10" />
     @if (p.icon; as pi) {
