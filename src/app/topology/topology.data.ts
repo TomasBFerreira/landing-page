@@ -96,7 +96,7 @@ const net = (env: HostEnv): TopoChip[] => {
         : 'Tunnel daemon for this environment. The public tunnel is opt-in for dev and QA and is off by default.' },
     { id: `${env}-traefik`, group: 'network', label: 'Traefik', serviceId: prod ? 'traefik' : undefined,
       paths: prod ? ['public', 'private'] : ['private'],
-      desc: 'Reverse proxy. Routes by hostname to k3s NodePorts and LXC services. Config is GitOps-managed.' },
+      desc: 'Reverse proxy. Routes by hostname to k3s NodePorts and LXC services, asking Authentik first for apps that need a sign-in. Config is GitOps-managed.' },
     { id: `${env}-adguard`, group: 'network', label: 'AdGuard', paths: ['private'],
       desc: 'DNS for the tailnet. Gives dev and QA hostnames a private answer so they never need a public record.' },
     { id: `${env}-gateway`, group: 'network', label: 'Gateway', paths: ['private'],
@@ -121,7 +121,7 @@ export const HOSTS: TopoHost[] = [
       { id: 'prod-vault', group: 'platform', label: 'Vault', serviceId: 'vault-prod', access: 'sso', paths: [],
         desc: 'Secrets for everything in production.' },
       { id: 'prod-authentik', group: 'platform', label: 'Authentik', serviceId: 'authentik', paths: ['public', 'private'],
-        desc: 'SSO. Traefik asks it before letting a request through to a gated app.' },
+        desc: 'SSO. Traefik asks it before letting a request through to a gated app; some apps are public and skip it.' },
       { id: 'prod-grafana', group: 'platform', label: 'Grafana', serviceId: 'grafana', access: 'sso', paths: [],
         desc: 'Metrics, logs and the probes that drive the status dots on this page.' },
       { id: 'prod-semaphore', group: 'platform', label: 'Semaphore', serviceId: 'semaphore', access: 'sso', paths: [],
@@ -133,7 +133,7 @@ export const HOSTS: TopoHost[] = [
       k3s('prod'),
       { id: 'prod-minecraft', group: 'workloads', label: 'Minecraft', access: 'private', paths: ['private'],
         desc: 'Private Java Edition server. Tailnet-only: no public route and no hostname.' },
-      { id: 'prod-torrent', group: 'workloads', label: 'Torrent', paths: ['public'],
+      { id: 'prod-torrent', group: 'workloads', label: 'Torrent', paths: [],
         desc: 'Download client behind the media apps.' },
       { id: 'prod-zigbee', group: 'workloads', label: 'Zigbee', paths: [],
         desc: 'Power monitoring over a Zigbee dongle.' },
@@ -180,6 +180,6 @@ export const EDGES: TopoEdge[] = [
 
 /** Ordered steps for the mobile stepper, one list per path. */
 export const STEPS: Record<PathKind, string[]> = {
-  public: ['internet', 'cloudflare', 'isp', 'router', 'prod-cloudflared', 'prod-traefik', 'prod-authentik', 'prod-k3s'],
+  public: ['internet', 'cloudflare', 'isp', 'router', 'prod-cloudflared', 'prod-traefik', 'prod-k3s'],
   private: ['tailnet', 'router', 'prod-adguard', 'prod-gateway', 'prod-traefik', 'prod-k3s'],
 };

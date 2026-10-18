@@ -4,16 +4,12 @@ import { HealthCheckService } from '../health-check.service';
 import { SERVICES } from '../services.config';
 import { ServiceStatus } from '../models/service.model';
 import {
-  CHIP_GAP, CHIP_H, CHIP_W, EDGES, GROUP_LABEL_H, GROUP_PAD, HOSTS, HOST_H, HOST_HEAD_H, HOST_W,
+  CHIP_GAP, CHIP_H, CHIP_W, EDGES, GROUP_LABEL_H, GROUP_PAD, GROUP_ORDER, HOSTS, HOST_H, HOST_HEAD_H, HOST_W,
   NODES, STEPS, VIEW,
   ChipGroup, PathKind, TopoChip, TopoEdge, TopoHost, TopoItem,
 } from './topology.data';
 
-const GROUPS: { id: ChipGroup; label: string }[] = [
-  { id: 'network', label: 'Network' },
-  { id: 'platform', label: 'Platform' },
-  { id: 'workloads', label: 'Workloads' },
-];
+const GROUP_LABEL: Record<ChipGroup, string> = { network: 'Network', platform: 'Platform', workloads: 'Workloads' };
 
 interface Rect { x: number; y: number; w: number; h: number; }
 interface ChipView { chip: TopoChip; rect: Rect; }
@@ -87,7 +83,7 @@ export class TopologyMapComponent {
   }
 
   @HostListener('document:keydown.escape')
-  onEscape(): void { this.close(); }
+  onEscape(): void { if (this.selectedId()) this.close(); }
 
   accessLabel(item: TopoItem): string | null {
     switch (item.access) {
@@ -98,15 +94,15 @@ export class TopologyMapComponent {
     }
   }
 
-  /** Total chips per group, used by the mobile accordion header. */
+  /** Total chips on the host, shown in the mobile accordion header. */
   chipCount(h: HostView): number { return h.host.chips.length; }
 
   private layoutHost(host: TopoHost): HostView {
     const rect: Rect = { x: host.x, y: host.y, w: HOST_W, h: HOST_H };
     let cursor = host.y + HOST_HEAD_H;
     const groups: GroupView[] = [];
-    for (const g of GROUPS) {
-      const members = host.chips.filter(c => c.group === g.id);
+    for (const g of GROUP_ORDER) {
+      const members = host.chips.filter(c => c.group === g);
       if (!members.length) continue;
       const gy = cursor;
       cursor += GROUP_LABEL_H;
@@ -119,7 +115,7 @@ export class TopologyMapComponent {
         },
       }));
       cursor += Math.ceil(members.length / 2) * (CHIP_H + CHIP_GAP) + GROUP_PAD;
-      groups.push({ label: g.label, x: host.x + 12, y: gy + 10, chips });
+      groups.push({ label: GROUP_LABEL[g], x: host.x + 12, y: gy + 10, chips });
     }
     return { host, rect, groups };
   }

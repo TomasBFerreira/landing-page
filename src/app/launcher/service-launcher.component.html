@@ -15,7 +15,7 @@
       @for (s of g.items; track s.service.id) {
         <li>
           <a class="tile" [href]="s.service.url" target="_blank" rel="noopener"
-             [attr.title]="s.service.description" [attr.aria-label]="s.service.name + ', ' + s.status">
+             [attr.title]="s.service.description">
             <span class="dot" aria-hidden="true"
                   [class.dot--up]="s.status === 'up'" [class.dot--down]="s.status === 'down'"></span>
             <span class="tile__name">{{ s.service.name }}</span>
